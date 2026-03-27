@@ -1,16 +1,41 @@
+import { getServerSession } from "next-auth";
+import LoginButton from "./LoginButton";
 import StudyBuddyGame from "./StudyBuddyGame";
 
-// Inline fallback logo so the page can render even if the original PNG
-// asset is missing from the repo.
+// Inline fallback logo
 const logoSrc =
   "data:image/svg+xml;charset=utf-8," +
   encodeURIComponent(
     '<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44"><rect width="44" height="44" rx="10" fill="#111827"/><text x="22" y="29" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#ffffff">S</text></svg>'
   );
 
-export default function Page() {
+export default async function Page() {
+  const session = await getServerSession();
   const year = new Date().getFullYear();
 
+  // --- 1. LANDING / LOGIN PAGE (Shown only if NOT logged in) ---
+  if (!session) {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-6 text-center">
+        <header className="mb-8">
+          <img src={logoSrc} alt="StudiBudd" width={80} height={80} className="mx-auto mb-4 rounded-xl shadow-lg" />
+          <h1 className="text-5xl font-bold text-gray-900 mb-2">StudiBudd</h1>
+          <p className="text-xl text-gray-600 italic">"Your motivation to stay on track"</p>
+        </header>
+
+        <div className="bg-white p-10 rounded-3xl shadow-2xl border border-gray-100 max-w-md w-full">
+          <p className="mb-8 text-gray-500">Sign in with your Google account to start hatching your focus missions.</p>
+          <LoginButton />
+        </div>
+        
+        <footer className="mt-12 text-gray-400 text-sm">
+          © {year} StudiBudd
+        </footer>
+      </main>
+    );
+  }
+
+  // --- 2. FULL WEBSITE (Shown only if LOGGED IN) ---
   return (
     <main>
       <a className="skip-link" href="#game">
@@ -37,6 +62,8 @@ export default function Page() {
             <a href="#game">Play</a>
             <a href="#features">How it works</a>
             <a href="#contact">Contact</a>
+            {/* The LoginButton will now show "Sign Out" automatically */}
+            <LoginButton />
           </nav>
         </div>
       </header>
@@ -50,7 +77,7 @@ export default function Page() {
               <span className="pill pillEgg pillBuddy">Mainly StudiBudd</span>
             </div>
 
-            <h1 className="hero-h1">Study like a game. Hatch your focus.</h1>
+            <h1 className="hero-h1">Welcome back, {session.user?.name}!</h1>
             <p className="hero-p">
               Pick Science or Math (or the Mainly StudiBudd egg). Complete missions
               and watch your egg hatch—because studying should feel rewarding.
@@ -135,16 +162,6 @@ export default function Page() {
               </div>
             </div>
           </div>
-
-          <div className="callout">
-            <div className="calloutTitle">Ready to start?</div>
-            <div className="calloutText">
-              Scroll down and hatch your first egg. It runs fully in your browser.
-            </div>
-            <a className="btn btn-primary btn-callout" href="#game">
-              Hatch now
-            </a>
-          </div>
         </div>
       </section>
 
@@ -209,4 +226,3 @@ export default function Page() {
     </main>
   );
 }
-
