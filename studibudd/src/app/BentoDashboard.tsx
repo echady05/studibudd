@@ -485,12 +485,12 @@ function FocusBoard() {
   const [page, setPage] = useState(0);
   const [slots, setSlots] = useState<Record<string, SlotData>>({
     // Format: "PageIndex-SlotIndex": { src: "path/to/file.png", label: "Name" }
-    "0-1": { src: "/studibudd/Pictures/Beige Egg.png", label: "Beige Egg" },
-    "0-2": { src: "/studibudd/Pictures/Blue Egg.png", label: "Blue Egg" },
-    "1-1": { src: "/studibudd/Pictures/Green Egg.png", label: "Green Egg" },
-    "1-2": { src: "/studibudd/Pictures/Grey Egg.png", label: "Grey Egg" },
-    "2-1": { src: "/studibudd/Pictures/Pink Egg.png", label: "Pink Egg" },
-    "2-2": { src: "/studibudd/Pictures/Purple Egg.png", label: "Purple Egg" },
+    "0-1": { src: "public/pictures/beige-egg.png", label: "Beige Egg" },
+    "0-2": { src: "public/pictures/blue-egg.png", label: "Blue Egg" },
+    "1-1": { src: "public/pictures/green-egg.png", label: "Green Egg" },
+    "1-2": { src: "public/pictures/grey-egg.png", label: "Grey Egg" },
+    "2-1": { src: "public/pictures/pink-egg.png", label: "Pink Egg" },
+    "2-2": { src: "public/pictures/red-egg.png", label: "Red Egg" },
   });
 
   const touchStartX = useRef<number | null>(null);
