@@ -486,11 +486,11 @@ function FocusBoard() {
   const [slots, setSlots] = useState<Record<string, SlotData>>({
     // Format: "PageIndex-SlotIndex": { src: "path/to/file.png", label: "Name" }
     "0-1": { src: "/pictures/Beige Egg.png", label: "Beige Egg" },
-    "0-2": { src: "/pictures/Blue Egg.png", label: "Sun Bird" },
-    "1-1": { src: "/pictures/Green Egg.png", label: "Stone Giant" },
-    "1-2": { src: "/pictures/Grey Egg.png", label: "Sea Serpent" },
-    "2-1": { src: "/pictures/Pink Egg.png", label: "Sky Hunter" },
-    "2-2": { src: "/pictures/Purple Egg.png", label: "Deep Dweller" },
+    "0-2": { src: "/pictures/Blue Egg.png", label: "Blue Egg" },
+    "1-1": { src: "/pictures/Green Egg.png", label: "Green Egg" },
+    "1-2": { src: "/pictures/Grey Egg.png", label: "Grey Egg" },
+    "2-1": { src: "/pictures/Pink Egg.png", label: "Pink Egg" },
+    "2-2": { src: "/pictures/Purple Egg.png", label: "Purple Egg" },
   });
 
   const touchStartX = useRef<number | null>(null);
