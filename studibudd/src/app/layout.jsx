@@ -2,10 +2,12 @@ import "./globals.css";
 import { Providers } from "./providers";
 
 export const metadata = {
-  title: "StudiBudd - Products",
+  title: "StudiBudd",
   description:
-    "Explore StudiBar, StudiLamp, and StudiBudd. Clean, simple, and made to inspire.",
-};
+    "Your Study Buddy Made to Motivate",
+    icons: {icon: 'pictures/tabicon.png',
+    },
+  };
 
 export default function RootLayout({ children }) {
   return (
