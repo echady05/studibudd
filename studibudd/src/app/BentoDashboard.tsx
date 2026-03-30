@@ -413,7 +413,7 @@ function ImageSlot({ slotKey, data, onChange }: {
           <img
             src={data.src}
             alt={data.label}
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain" }}
           />
         ) : (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
@@ -483,13 +483,14 @@ function ImageSlot({ slotKey, data, onChange }: {
 
 function FocusBoard() {
   const [page, setPage] = useState(0);
-  const [slots, setSlots] = useState<Record<string, SlotData>>(() => {
-    const init: Record<string, SlotData> = {};
-    for (let p = 0; p < FOCUS_PAGES; p++) {
-      init[`${p}-1`] = { src: null, label: `Slot ${p * 2 + 1}` };
-      init[`${p}-2`] = { src: null, label: `Slot ${p * 2 + 2}` };
-    }
-    return init;
+  const [slots, setSlots] = useState<Record<string, SlotData>>({
+    // Format: "PageIndex-SlotIndex": { src: "path/to/file.png", label: "Name" }
+    "0-1": { src: "/pictures/Beige Egg.png", label: "Beige Egg" },
+    "0-2": { src: "/pictures/Blue Egg.png", label: "Sun Bird" },
+    "1-1": { src: "/pictures/Green Egg.png", label: "Stone Giant" },
+    "1-2": { src: "/pictures/Grey Egg.png", label: "Sea Serpent" },
+    "2-1": { src: "/pictures/Pink Egg.png", label: "Sky Hunter" },
+    "2-2": { src: "/pictures/Purple Egg.png", label: "Deep Dweller" },
   });
 
   const touchStartX = useRef<number | null>(null);
