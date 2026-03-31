@@ -308,7 +308,7 @@ function CanvasConnect() {
   const [status, setStatus] = useState<"loading" | "connected" | "disconnected">("loading");
   const [courseCount, setCourseCount] = useState(0);
   const [showForm, setShowForm] = useState(false);
-  const [url, setUrl] = useState("https://unh.instructure.com");
+  const [url, setUrl] = useState("https://canvas.newhaven.edu");
   const [token, setToken] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
