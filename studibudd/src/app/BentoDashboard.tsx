@@ -697,7 +697,7 @@ function FocusBoard() {
     };
   }, [handleMouseMove, handleMouseUp]);
 
-  const PAGE_LABELS = ["Page 1 · Slots 1–2", "Page 2 · Slots 3–4", "Page 3 · Slots 5–6"];
+  const PAGE_LABELS = ["Page 1", "Page 2", "Page 3"];
 
   return (
     <div className="bento-card" style={{ overflow: "hidden" }}>
@@ -708,7 +708,7 @@ function FocusBoard() {
         borderBottom: "0.5px solid var(--bento-border)",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ fontSize: 13, fontWeight: 500, color: "var(--bento-text-primary)" }}>Focus Board</span>
+          <span style={{ fontSize: 13, fontWeight: 500, color: "var(--bento-text-primary)" }}>Courses</span>
           <span style={{ fontSize: 11, color: "var(--bento-text-tertiary)" }}>{PAGE_LABELS[page]}</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -848,11 +848,12 @@ export default function BentoDashboard({ session }: BentoDashboardProps) {
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
 
             {/* Logo */}
-            <div className="bento-card" style={{ padding: "16px 20px", display: "flex", alignItems: "center", gap: 12 }}>
-              <img src={logoSrc} alt="StudiBudd" width={38} height={38} style={{ borderRadius: 10, flexShrink: 0 }} />
+            <div className="bento-card" style={{ padding: "20px", display: "flex", justifyContent: "center", alignItems: "center", backgroundColor: "#DAE0ED", gap: 12 }}>
+              <img 
+              src="/pictures/studibuddlogo/studibuddeggbooks.png"
+              alt="StudiBudd Logo" 
+              width={169} height={80} style={{ borderRadius: 10, flexShrink: 0, objectFit: "contain"}} />
               <div>
-                <div style={{ fontSize: 17, fontWeight: 600, color: "var(--bento-text-primary)", letterSpacing: "-0.3px" }}>StudiBudd</div>
-                <div style={{ fontSize: 11, color: "var(--bento-text-secondary)", marginTop: 1 }}>Study Buddy game</div>
               </div>
             </div>
 
@@ -937,8 +938,8 @@ export default function BentoDashboard({ session }: BentoDashboardProps) {
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
                 {[
-                  { dot: "#1D9E75", title: "Choose an egg", text: "Science, Math, or Mainly StudiBudd." },
-                  { dot: "#378ADD", title: "Complete missions", text: "Quick questions fill up your egg." },
+                  { dot: "#1D9E75", title: "Choose an egg", text: "Pick the creatures you want to represent your courses" },
+                  { dot: "#378ADD", title: "Complete assignments", text: "Completing assignments produces XP for your egg." },
                   { dot: "#BA7517", title: "Hatch & level up", text: "XP → levels → streak keeps going." },
                 ].map(f => (
                   <div key={f.title} style={{ background: "var(--bento-surface)", borderRadius: 10, padding: "12px 14px" }}>
