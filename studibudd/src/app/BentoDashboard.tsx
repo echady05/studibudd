@@ -27,6 +27,7 @@ interface CalendarEvent {
 interface SlotData {
   src: string | null;
   label: string;
+  course?: string;
 }
 
 interface BentoDashboardProps {
@@ -41,11 +42,7 @@ interface BentoDashboardProps {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const logoSrc =
-  "data:image/svg+xml;charset=utf-8," +
-  encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44"><rect width="44" height="44" rx="10" fill="#111827"/><text x="22" y="29" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#ffffff">S</text></svg>'
-  );
+const logoSrc = "/pictures/beige-egg.png";
 
 const MONTHS = [
   "January","February","March","April","May","June",
@@ -508,10 +505,11 @@ function Assignments() {
 
 // ─── Single Image / Creature Slot ─────────────────────────────────────────────
 
-function ImageSlot({ slotKey, data, onChange }: {
+function ImageSlot({ slotKey, data, onChange, allAssignments }: {
   slotKey: string;
   data: SlotData;
   onChange: (key: string, data: SlotData) => void;
+  allAssignments: CanvasAssignment[];
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const slotNumber = slotKey.split("-").map(Number);
@@ -520,7 +518,7 @@ function ImageSlot({ slotKey, data, onChange }: {
   const handleFile = (file: File) => {
     const reader = new FileReader();
     reader.onload = () =>
-      onChange(slotKey, { src: reader.result as string, label: file.name.replace(/\.[^.]+$/, "") });
+      onChange(slotKey, { ...data, src: reader.result as string, label: data.label || file.name.replace(/\.[^.]+$/, "") });
     reader.readAsDataURL(file);
   };
 
@@ -537,7 +535,23 @@ function ImageSlot({ slotKey, data, onChange }: {
 
   const clear = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onChange(slotKey, { src: null, label: `Slot ${displayNum}` });
+    onChange(slotKey, { ...data, src: null });
+  };
+
+  // Filter assignments by this slot's linked course
+  const courseQuery = (data.course || "").trim().toLowerCase();
+  const slotAssignments = courseQuery
+    ? allAssignments.filter(a =>
+        a.courseName?.toLowerCase().includes(courseQuery) ||
+        a.courseCode?.toLowerCase().includes(courseQuery)
+      ).slice(0, 4)
+    : [];
+  const urgentAssignment = slotAssignments.find(a => a.urgent);
+
+  const inputStyle: React.CSSProperties = {
+    fontSize: 12, fontWeight: 500, color: "var(--bento-text-primary)",
+    background: "transparent", border: "none", outline: "none",
+    width: "100%", padding: 0, fontFamily: "inherit",
   };
 
   return (
@@ -548,7 +562,7 @@ function ImageSlot({ slotKey, data, onChange }: {
     >
       {/* Image / creature area */}
       <div style={{
-        minHeight: 280, position: "relative",
+        minHeight: 200, position: "relative",
         display: "flex", alignItems: "center", justifyContent: "center",
         background: "var(--bento-surface)",
       }}>
@@ -560,7 +574,6 @@ function ImageSlot({ slotKey, data, onChange }: {
           />
         ) : (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
-            {/* Egg / creature placeholder */}
             <div style={{
               width: 54, height: 64,
               borderRadius: "50% 50% 50% 50% / 60% 60% 40% 40%",
@@ -586,34 +599,72 @@ function ImageSlot({ slotKey, data, onChange }: {
             >Upload image</button>
           </div>
         )}
-        {data.src && (
-          <div
-            onClick={() => inputRef.current?.click()}
-            style={{ position: "absolute", inset: 0, cursor: "pointer", zIndex: 1 }}
-          />
-        )}
       </div>
 
-      {/* Caption */}
+      {/* Info panel */}
       <div style={{
-        padding: "10px 14px",
         borderTop: "0.5px solid var(--bento-border)",
         background: "var(--bento-bg)",
         position: "relative", zIndex: 2,
-        display: "flex", alignItems: "center", justifyContent: "space-between",
       }}>
-        <div>
-          <div style={{ fontSize: 12, fontWeight: 500, color: "var(--bento-text-primary)" }}>{data.label}</div>
-          <div style={{ fontSize: 10, color: "var(--bento-text-tertiary)", marginTop: 1 }}>
-            {data.src ? "Click to replace" : "Drop or upload"}
+        {/* Urgent assignment banner */}
+        {urgentAssignment && (
+          <div style={{
+            padding: "7px 14px",
+            background: "rgba(220,38,38,0.07)",
+            borderBottom: "0.5px solid rgba(220,38,38,0.15)",
+            display: "flex", alignItems: "flex-start", gap: 6,
+          }}>
+            <span style={{ fontSize: 13, lineHeight: 1 }}>!</span>
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 600, color: "#dc2626", letterSpacing: "0.04em" }}>DUE SOON</div>
+              <div style={{ fontSize: 11, color: "#dc2626", marginTop: 1 }}>{urgentAssignment.name}</div>
+              <div style={{ fontSize: 10, color: "rgba(220,38,38,0.7)", marginTop: 1 }}>{urgentAssignment.dueLabel}</div>
+            </div>
           </div>
+        )}
+
+        {/* Creature name + course name */}
+        <div style={{ padding: "10px 14px 8px", display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <input
+              value={data.label}
+              onChange={e => onChange(slotKey, { ...data, label: e.target.value })}
+              placeholder={`Creature ${displayNum}`}
+              style={inputStyle}
+            />
+            <input
+              value={data.course || ""}
+              onChange={e => onChange(slotKey, { ...data, course: e.target.value })}
+              placeholder="Link a course..."
+              style={{ ...inputStyle, fontSize: 11, fontWeight: 400, color: "var(--bento-text-tertiary)", marginTop: 3 }}
+            />
+          </div>
+          {data.src && (
+            <button onClick={clear} style={{
+              fontSize: 10, color: "var(--bento-text-tertiary)", flexShrink: 0,
+              background: "none", border: "0.5px solid var(--bento-border)",
+              borderRadius: 6, padding: "3px 8px", cursor: "pointer",
+            }}>Clear</button>
+          )}
         </div>
-        {data.src && (
-          <button onClick={clear} style={{
-            fontSize: 10, color: "var(--bento-text-tertiary)",
-            background: "none", border: "0.5px solid var(--bento-border)",
-            borderRadius: 6, padding: "3px 8px", cursor: "pointer",
-          }}>Clear</button>
+
+        {/* Assignment list */}
+        {slotAssignments.length > 0 && (
+          <div style={{ borderTop: "0.5px solid var(--bento-border)", padding: "8px 14px 10px" }}>
+            {slotAssignments.map(a => (
+              <div key={a.id} style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 4 }}>
+                <span style={{ width: 4, height: 4, borderRadius: "50%", background: a.urgent ? "#dc2626" : "var(--bento-text-tertiary)", display: "inline-block", flexShrink: 0, marginBottom: 1 }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <span style={{ fontSize: 11, color: a.urgent ? "#dc2626" : "var(--bento-text-primary)", fontWeight: a.urgent ? 500 : 400 }}>{a.name}</span>
+                  <span style={{ fontSize: 10, color: "var(--bento-text-tertiary)", marginLeft: 5 }}>{a.dueLabel}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        {courseQuery && slotAssignments.length === 0 && allAssignments.length > 0 && (
+          <div style={{ padding: "0 14px 10px", fontSize: 10, color: "var(--bento-text-tertiary)" }}>No upcoming assignments</div>
         )}
       </div>
 
@@ -622,19 +673,26 @@ function ImageSlot({ slotKey, data, onChange }: {
   );
 }
 
-// ─── Focus Board ──────────────────────────────────────────────────────────────
+// ─── Planner ──────────────────────────────────────────────────────────────
 
 function FocusBoard() {
   const [page, setPage] = useState(0);
   const [slots, setSlots] = useState<Record<string, SlotData>>({
-    // Format: "PageIndex-SlotIndex": { src: "path/to/file.png", label: "Name" }
-    "0-1": { src: "pictures/beige-egg.png", label: "Beige Egg" },
-    "0-2": { src: "pictures/blue-egg.png", label: "Blue Egg" },
-    "1-1": { src: "pictures/green-egg.png", label: "Green Egg" },
-    "1-2": { src: "pictures/grey-egg.png", label: "Grey Egg" },
-    "2-1": { src: "pictures/pink-egg.png", label: "Pink Egg" },
-    "2-2": { src: "pictures/red-egg.png", label: "Red Egg" },
+    "0-1": { src: "/pictures/beige-egg.png", label: "Beige Egg", course: "" },
+    "0-2": { src: "/pictures/blue-egg.png", label: "Blue Egg", course: "" },
+    "1-1": { src: "/pictures/green-egg.png", label: "Green Egg", course: "" },
+    "1-2": { src: "/pictures/grey-egg.png", label: "Grey Egg", course: "" },
+    "2-1": { src: "/pictures/pink-egg.png", label: "Pink Egg", course: "" },
+    "2-2": { src: "/pictures/red-egg.png", label: "Red Egg", course: "" },
   });
+  const [assignments, setAssignments] = useState<CanvasAssignment[]>([]);
+
+  useEffect(() => {
+    fetch("/api/canvas/assignments")
+      .then(r => r.json())
+      .then(d => { if (d.connected && Array.isArray(d.assignments)) setAssignments(d.assignments); })
+      .catch(() => {});
+  }, []);
 
   const touchStartX = useRef<number | null>(null);
   const dragStartX = useRef<number | null>(null);
@@ -708,19 +766,19 @@ function FocusBoard() {
         borderBottom: "0.5px solid var(--bento-border)",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ fontSize: 13, fontWeight: 500, color: "var(--bento-text-primary)" }}>Focus Board</span>
+          <span style={{ fontSize: 13, fontWeight: 500, color: "var(--bento-text-primary)" }}>Planner</span>
           <span style={{ fontSize: 11, color: "var(--bento-text-tertiary)" }}>{PAGE_LABELS[page]}</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           {/* Pill dots */}
-          <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+          <div style={{ display: "flex", gap: 5, alignItems: "center" }}>
             {Array.from({ length: FOCUS_PAGES }).map((_, i) => (
               <button
                 key={i}
                 onClick={() => goTo(i)}
                 style={{
-                  width: i === page ? 20 : 6,
-                  height: 6, borderRadius: 3,
+                  width: i === page ? 28 : 8,
+                  height: 8, borderRadius: 4,
                   background: i === page ? "#111827" : "var(--bento-border-hover)",
                   border: "none", cursor: "pointer", padding: 0,
                   transition: "width 0.22s cubic-bezier(0.4,0,0.2,1), background 0.22s",
@@ -737,12 +795,13 @@ function FocusBoard() {
                 onClick={() => goTo(page + (i === 0 ? -1 : 1))}
                 disabled={disabled}
                 style={{
-                  background: "none", border: "0.5px solid var(--bento-border)",
-                  borderRadius: 6, width: 22, height: 22,
+                  background: disabled ? "none" : "var(--bento-surface)",
+                  border: "0.5px solid var(--bento-border-hover)",
+                  borderRadius: 8, width: 32, height: 32,
                   cursor: disabled ? "not-allowed" : "pointer",
-                  color: disabled ? "var(--bento-text-tertiary)" : "var(--bento-text-secondary)",
-                  fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center",
-                  opacity: disabled ? 0.4 : 1, transition: "opacity 0.15s",
+                  color: disabled ? "var(--bento-text-tertiary)" : "var(--bento-text-primary)",
+                  fontSize: 20, display: "flex", alignItems: "center", justifyContent: "center",
+                  opacity: disabled ? 0.3 : 1, transition: "opacity 0.15s",
                 }}
               >{arrow}</button>
             );
@@ -770,9 +829,9 @@ function FocusBoard() {
               key={pageIdx}
               style={{ width: `${100 / FOCUS_PAGES}%`, display: "grid", gridTemplateColumns: "1fr 1fr" }}
             >
-              <ImageSlot slotKey={`${pageIdx}-1`} data={slots[`${pageIdx}-1`]} onChange={updateSlot} />
+              <ImageSlot slotKey={`${pageIdx}-1`} data={slots[`${pageIdx}-1`]} onChange={updateSlot} allAssignments={assignments} />
               <div style={{ borderLeft: "0.5px solid var(--bento-border)" }}>
-                <ImageSlot slotKey={`${pageIdx}-2`} data={slots[`${pageIdx}-2`]} onChange={updateSlot} />
+                <ImageSlot slotKey={`${pageIdx}-2`} data={slots[`${pageIdx}-2`]} onChange={updateSlot} allAssignments={assignments} />
               </div>
             </div>
           ))}
@@ -906,7 +965,7 @@ export default function BentoDashboard({ session }: BentoDashboardProps) {
               </div>
             </div>
 
-            {/* ── Focus Board ── */}
+            {/* ── Planner ── */}
             <FocusBoard />
 
             {/* Game */}
