@@ -18,7 +18,7 @@ async function loadDb() {
     if (!parsed || typeof parsed !== "object") throw new Error("Bad db");
     return parsed;
   } catch {
-    return { users: [], progressByUserId: {} };
+    return { byEmail: {} };
   }
 }
 
@@ -34,20 +34,37 @@ async function saveDb(db) {
   await fs.rename(tmp, DB_FILE);
 }
 
-export async function getDb() {
-  return loadDb();
-}
-
-export async function writeDb(mutator) {
-  return withDbWriteLock(async () => {
-    const db = await loadDb();
-    await mutator(db);
-    await saveDb(db);
-    return db;
-  });
-}
-
 export function normalizeEmail(email) {
   return String(email || "").trim().toLowerCase();
 }
 
+function defaultUserData() {
+  return {
+    canvasUrl: null,
+    canvasToken: null,
+    progress: {
+      xp: 0,
+      streak: 0,
+      eggCount: 0,
+      subject: "science",
+      subjectProgress: { science: 0, math: 0, main: 0 },
+    },
+  };
+}
+
+export async function getUserData(email) {
+  const db = await loadDb();
+  if (!db.byEmail) return null;
+  return db.byEmail[normalizeEmail(email)] || null;
+}
+
+export async function updateUserData(email, mutator) {
+  return withDbWriteLock(async () => {
+    const db = await loadDb();
+    if (!db.byEmail) db.byEmail = {};
+    const key = normalizeEmail(email);
+    if (!db.byEmail[key]) db.byEmail[key] = defaultUserData();
+    await mutator(db.byEmail[key]);
+    await saveDb(db);
+  });
+}

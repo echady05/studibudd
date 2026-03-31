@@ -291,74 +291,217 @@ function Calendar() {
   );
 }
 
+// ─── Canvas Connect ───────────────────────────────────────────────────────────
+
+interface CanvasAssignment {
+  id: number;
+  name: string;
+  courseName: string;
+  courseCode: string;
+  dueAt: string;
+  dueLabel: string;
+  urgent: boolean;
+  htmlUrl: string;
+}
+
+function CanvasConnect() {
+  const [status, setStatus] = useState<"loading" | "connected" | "disconnected">("loading");
+  const [courseCount, setCourseCount] = useState(0);
+  const [showForm, setShowForm] = useState(false);
+  const [url, setUrl] = useState("https://unh.instructure.com");
+  const [token, setToken] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    fetch("/api/canvas/courses")
+      .then(r => r.json())
+      .then(d => {
+        if (d.connected && Array.isArray(d.courses)) {
+          setStatus("connected");
+          setCourseCount(d.courses.length);
+        } else {
+          setStatus("disconnected");
+        }
+      })
+      .catch(() => setStatus("disconnected"));
+  }, []);
+
+  async function connect(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    setSaving(true);
+    try {
+      const res = await fetch("/api/canvas/connect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ canvasUrl: url.trim(), canvasToken: token.trim() }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) { setError(d.error || "Connection failed"); return; }
+      setStatus("connected");
+      setCourseCount(d.courses?.length ?? 0);
+      setShowForm(false);
+      window.location.reload();
+    } catch { setError("Network error"); }
+    finally { setSaving(false); }
+  }
+
+  async function disconnect() {
+    await fetch("/api/canvas/connect", { method: "DELETE" });
+    setStatus("disconnected");
+    setCourseCount(0);
+    window.location.reload();
+  }
+
+  const tokenPageUrl = `${url.trim().replace(/\/+$/, "")}/profile/settings#access_tokens_holder`;
+
+  if (status === "loading") return null;
+
+  return (
+    <div className="bento-card" style={{ padding: "14px 18px" }}>
+      {status === "connected" ? (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
+              <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#10b981", display: "inline-block" }} />
+              <span style={{ fontSize: 12, fontWeight: 500, color: "var(--bento-text-primary)" }}>Canvas connected</span>
+            </div>
+            <div style={{ fontSize: 11, color: "var(--bento-text-tertiary)" }}>{courseCount} course{courseCount !== 1 ? "s" : ""} loaded</div>
+          </div>
+          <button onClick={disconnect} style={{ fontSize: 11, color: "var(--bento-text-tertiary)", background: "none", border: "0.5px solid var(--bento-border)", borderRadius: 6, padding: "3px 10px", cursor: "pointer" }}>
+            Disconnect
+          </button>
+        </div>
+      ) : showForm ? (
+        <form onSubmit={connect} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div style={{ fontSize: 12, fontWeight: 500, color: "var(--bento-text-primary)", marginBottom: 2 }}>Connect Canvas</div>
+
+          {/* Step 1 */}
+          <div style={{ fontSize: 11, color: "var(--bento-text-secondary)", fontWeight: 500 }}>1. Your Canvas URL</div>
+          <input
+            type="url" required placeholder="https://yourschool.instructure.com"
+            value={url} onChange={e => setUrl(e.target.value)}
+            style={{ fontSize: 12, padding: "6px 10px", borderRadius: 8, border: "0.5px solid var(--bento-border-hover)", background: "var(--bento-surface)", color: "var(--bento-text-primary)", outline: "none", marginTop: -4 }}
+          />
+
+          {/* Step 2 */}
+          <div style={{ fontSize: 11, color: "var(--bento-text-secondary)", fontWeight: 500 }}>2. Open your Canvas token page</div>
+          <a
+            href={tokenPageUrl} target="_blank" rel="noopener noreferrer"
+            style={{ fontSize: 12, padding: "6px 10px", borderRadius: 8, border: "0.5px solid var(--bento-border-hover)", background: "var(--bento-surface)", color: "var(--bento-text-primary)", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: -4 }}
+          >
+            <span>Open Canvas Token Page</span>
+            <span style={{ fontSize: 10, opacity: 0.5 }}>opens in new tab ↗</span>
+          </a>
+          <div style={{ fontSize: 10, color: "var(--bento-text-tertiary)", marginTop: -6 }}>
+            Click &ldquo;+ New Access Token&rdquo;, give it any name, then copy the token it generates.
+          </div>
+
+          {/* Step 3 */}
+          <div style={{ fontSize: 11, color: "var(--bento-text-secondary)", fontWeight: 500 }}>3. Paste your token here</div>
+          <input
+            type="password" required placeholder="Paste token here"
+            value={token} onChange={e => setToken(e.target.value)}
+            style={{ fontSize: 12, padding: "6px 10px", borderRadius: 8, border: "0.5px solid var(--bento-border-hover)", background: "var(--bento-surface)", color: "var(--bento-text-primary)", outline: "none", marginTop: -4 }}
+          />
+
+          {error && <div style={{ fontSize: 11, color: "#dc2626", background: "rgba(220,38,38,0.07)", borderRadius: 6, padding: "5px 8px" }}>{error}</div>}
+          <div style={{ display: "flex", gap: 8 }}>
+            <button type="submit" disabled={saving} style={{ fontSize: 12, padding: "5px 14px", background: "#111827", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", flex: 1 }}>
+              {saving ? "Connecting..." : "Connect"}
+            </button>
+            <button type="button" onClick={() => setShowForm(false)} style={{ fontSize: 12, padding: "5px 14px", background: "none", border: "0.5px solid var(--bento-border)", borderRadius: 8, cursor: "pointer", color: "var(--bento-text-secondary)" }}>
+              Cancel
+            </button>
+          </div>
+        </form>
+      ) : (
+        <button
+          onClick={() => setShowForm(true)}
+          style={{ width: "100%", textAlign: "left", background: "none", border: "0.5px dashed var(--bento-border-hover)", borderRadius: 10, padding: "10px 14px", cursor: "pointer", color: "var(--bento-text-secondary)", fontSize: 12 }}
+        >
+          + Connect Canvas to see real assignments &amp; courses
+        </button>
+      )}
+    </div>
+  );
+}
+
 // ─── Assignments ──────────────────────────────────────────────────────────────
 
-const INITIAL_ASSIGNMENTS: Assignment[] = [
-  { id: 1, name: "Chapter 4 Review",    subject: "Science · Missions",  due: "Today", done: false, urgent: true  },
-  { id: 2, name: "Algebra Problem Set", subject: "Math · 12 questions", due: "Apr 1", done: false, urgent: true  },
-  { id: 3, name: "StudiBudd Egg Hatch", subject: "Mainly StudiBudd",    due: "Apr 3", done: false, urgent: false },
-  { id: 4, name: "Intro Quiz",          subject: "Science",              due: "Done",  done: true,  urgent: false },
-  { id: 5, name: "Streak Milestone",    subject: "StudiBudd XP",        due: "Done",  done: true,  urgent: false },
-];
-
 function Assignments() {
-  const [items, setItems] = useState<Assignment[]>(INITIAL_ASSIGNMENTS);
-  const pending = items.filter(a => !a.done).length;
-  const toggle = (id: number) =>
-    setItems(prev => prev.map(a => a.id === id ? { ...a, done: !a.done } : a));
+  const [canvasItems, setCanvasItems] = useState<CanvasAssignment[] | null>(null);
+  const [localDone, setLocalDone] = useState<Set<number>>(new Set());
+  const [connected, setConnected] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/canvas/assignments")
+      .then(r => r.json())
+      .then(d => {
+        setConnected(d.connected);
+        if (d.connected && Array.isArray(d.assignments)) setCanvasItems(d.assignments);
+      })
+      .catch(() => {});
+  }, []);
+
+  const toggleDone = (id: number) =>
+    setLocalDone(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
+
+  const pending = canvasItems ? canvasItems.filter(a => !localDone.has(a.id)).length : 0;
 
   return (
     <div style={{ padding: "18px 20px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
         <span style={{ fontSize: 13, fontWeight: 500, color: "var(--bento-text-primary)" }}>Assignments</span>
-        <span style={{
-          fontSize: 10, background: "#FAEEDA", color: "#854F0B",
-          padding: "2px 8px", borderRadius: 20, fontWeight: 500,
-        }}>{pending} pending</span>
+        {canvasItems && (
+          <span style={{ fontSize: 10, background: "#FAEEDA", color: "#854F0B", padding: "2px 8px", borderRadius: 20, fontWeight: 500 }}>
+            {pending} pending
+          </span>
+        )}
       </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        {items.map(a => (
-          <div
-            key={a.id}
-            onClick={() => toggle(a.id)}
-            style={{
-              display: "flex", alignItems: "center", gap: 10,
-              padding: "10px 12px", borderRadius: 10,
-              background: "var(--bento-surface)",
-              border: "0.5px solid transparent",
-              cursor: "pointer", transition: "border-color 0.15s",
-            }}
-            onMouseEnter={e => (e.currentTarget.style.borderColor = "var(--bento-border-hover)")}
-            onMouseLeave={e => (e.currentTarget.style.borderColor = "transparent")}
-          >
-            <div style={{
-              width: 16, height: 16, borderRadius: "50%",
-              border: a.done ? "none" : "1.5px solid var(--bento-border-hover)",
-              background: a.done ? "#111827" : "transparent",
-              flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
-            }}>
-              {a.done && (
-                <svg width="8" height="6" viewBox="0 0 8 6" fill="none">
-                  <path d="M1 3L3 5L7 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              )}
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{
-                fontSize: 12, fontWeight: 500,
-                color: a.done ? "var(--bento-text-tertiary)" : "var(--bento-text-primary)",
-                textDecoration: a.done ? "line-through" : "none",
-                whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
-              }}>{a.name}</div>
-              <div style={{ fontSize: 10, color: "var(--bento-text-tertiary)", marginTop: 1 }}>{a.subject}</div>
-            </div>
-            <div style={{
-              fontSize: 10, flexShrink: 0,
-              color: a.urgent && !a.done ? "#993C1D" : "var(--bento-text-tertiary)",
-            }}>{a.due}</div>
-          </div>
-        ))}
-      </div>
+
+      {!connected && (
+        <div style={{ fontSize: 12, color: "var(--bento-text-tertiary)", textAlign: "center", padding: "16px 0" }}>
+          Connect Canvas above to see your real assignments
+        </div>
+      )}
+
+      {connected && canvasItems && canvasItems.length === 0 && (
+        <div style={{ fontSize: 12, color: "var(--bento-text-tertiary)", textAlign: "center", padding: "16px 0" }}>
+          No upcoming assignments
+        </div>
+      )}
+
+      {connected && canvasItems && canvasItems.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {canvasItems.map(a => {
+            const done = localDone.has(a.id);
+            return (
+              <div
+                key={a.id}
+                onClick={() => toggleDone(a.id)}
+                style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 10, background: "var(--bento-surface)", border: "0.5px solid transparent", cursor: "pointer", transition: "border-color 0.15s" }}
+                onMouseEnter={e => (e.currentTarget.style.borderColor = "var(--bento-border-hover)")}
+                onMouseLeave={e => (e.currentTarget.style.borderColor = "transparent")}
+              >
+                <div style={{ width: 16, height: 16, borderRadius: "50%", border: done ? "none" : "1.5px solid var(--bento-border-hover)", background: done ? "#111827" : "transparent", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  {done && <svg width="8" height="6" viewBox="0 0 8 6" fill="none"><path d="M1 3L3 5L7 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 12, fontWeight: 500, color: done ? "var(--bento-text-tertiary)" : "var(--bento-text-primary)", textDecoration: done ? "line-through" : "none", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {a.name}
+                  </div>
+                  <div style={{ fontSize: 10, color: "var(--bento-text-tertiary)", marginTop: 1 }}>{a.courseCode || a.courseName}</div>
+                </div>
+                <div style={{ fontSize: 10, flexShrink: 0, color: a.urgent && !done ? "#993C1D" : "var(--bento-text-tertiary)" }}>
+                  {a.dueLabel}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -712,6 +855,9 @@ export default function BentoDashboard({ session }: BentoDashboardProps) {
                 <div style={{ fontSize: 11, color: "var(--bento-text-secondary)", marginTop: 1 }}>Study Buddy game</div>
               </div>
             </div>
+
+            {/* Canvas Connect */}
+            <CanvasConnect />
 
             {/* Calendar */}
             <div className="bento-card">

@@ -9,3 +9,5 @@ dist/
 .DS_Store
 Thumbs.db
 
+# local database (contains user tokens/emails - never commit)
+data/
