@@ -626,35 +626,33 @@ function ImageSlot({ slotKey, data, onChange }: {
 
 function FocusBoard() {
   const [page, setPage] = useState(0);
-  const [slots, setSlots] = useState<Record<string, SlotData>>({
-    // Format: "PageIndex-SlotIndex": { src: "path/to/file.png", label: "Name" }
-    "0-1": { src: "pictures/buddies/beige/beige-egg.png", label: "Beige Egg" },
-    "0-2": { src: "pictures/buddies/blue/blue-egg.png", label: "Blue Egg" },
-    "1-1": { src: "pictures/buddies/green/green-egg.png", label: "Green Egg" },
-    "1-2": { src: "pictures/buddies/grey/grey-egg.png", label: "Grey Egg" },
-    "2-1": { src: "pictures/buddies/pink/pink-egg.png", label: "Pink Egg" },
-    "2-2": { src: "pictures/buddies/red/red-egg.png", label: "Red Egg" },
-  });
+
+  const slots = [
+    [
+      { src: "pictures/buddies/beige/beige-egg.png", label: "Beige Egg" },
+      { src: "pictures/buddies/blue/blue-egg.png",  label: "Blue Egg"  },
+    ],
+    [
+      { src: "pictures/buddies/green/green-egg.png", label: "Green Egg" },
+      { src: "pictures/buddies/grey/grey-egg.png",   label: "Grey Egg"  },
+    ],
+    [
+      { src: "pictures/buddies/pink/pink-egg.png", label: "Pink Egg" },
+      { src: "pictures/buddies/red/red-egg.png",   label: "Red Egg"  },
+    ],
+  ];
 
   const touchStartX = useRef<number | null>(null);
   const dragStartX = useRef<number | null>(null);
-  const isDragging = useRef(false);
   const [dragOffset, setDragOffset] = useState(0);
-
-  const updateSlot = useCallback((key: string, data: SlotData) => {
-    setSlots(prev => ({ ...prev, [key]: data }));
-  }, []);
 
   const goTo = useCallback((p: number) => {
     setPage(Math.max(0, Math.min(FOCUS_PAGES - 1, p)));
     setDragOffset(0);
   }, []);
 
-  // Touch
-  const onTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
-  };
-  const onTouchMove = (e: React.TouchEvent) => {
+  const onTouchStart = (e: React.TouchEvent) => { touchStartX.current = e.touches[0].clientX; };
+  const onTouchMove  = (e: React.TouchEvent) => {
     if (touchStartX.current === null) return;
     setDragOffset(e.touches[0].clientX - touchStartX.current);
   };
@@ -665,10 +663,8 @@ function FocusBoard() {
     touchStartX.current = null;
   };
 
-  // Mouse drag
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (dragStartX.current === null) return;
-    isDragging.current = true;
     setDragOffset(e.clientX - dragStartX.current);
   }, []);
 
@@ -678,23 +674,19 @@ function FocusBoard() {
     else if (dx > 60 && page > 0) goTo(page - 1);
     else setDragOffset(0);
     dragStartX.current = null;
-    isDragging.current = false;
     window.removeEventListener("mousemove", handleMouseMove);
     window.removeEventListener("mouseup", handleMouseUp);
   }, [page, goTo, handleMouseMove]);
 
   const onMouseDown = (e: React.MouseEvent) => {
     dragStartX.current = e.clientX;
-    isDragging.current = false;
     window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("mouseup", handleMouseUp);
   };
 
-  useEffect(() => {
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
-    };
+  useEffect(() => () => {
+    window.removeEventListener("mousemove", handleMouseMove);
+    window.removeEventListener("mouseup", handleMouseUp);
   }, [handleMouseMove, handleMouseUp]);
 
   const PAGE_LABELS = ["Page 1", "Page 2", "Page 3"];
@@ -712,50 +704,36 @@ function FocusBoard() {
           <span style={{ fontSize: 11, color: "var(--bento-text-tertiary)" }}>{PAGE_LABELS[page]}</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          {/* Pill dots */}
           <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
             {Array.from({ length: FOCUS_PAGES }).map((_, i) => (
-              <button
-                key={i}
-                onClick={() => goTo(i)}
-                style={{
-                  width: i === page ? 20 : 6,
-                  height: 6, borderRadius: 3,
-                  background: i === page ? "#111827" : "var(--bento-border-hover)",
-                  border: "none", cursor: "pointer", padding: 0,
-                  transition: "width 0.22s cubic-bezier(0.4,0,0.2,1), background 0.22s",
-                }}
-              />
+              <button key={i} onClick={() => goTo(i)} style={{
+                width: i === page ? 20 : 6, height: 6, borderRadius: 3,
+                background: i === page ? "#111827" : "var(--bento-border-hover)",
+                border: "none", cursor: "pointer", padding: 0,
+                transition: "width 0.22s cubic-bezier(0.4,0,0.2,1), background 0.22s",
+              }} />
             ))}
           </div>
-          {/* Arrows */}
           {["‹","›"].map((arrow, i) => {
             const disabled = i === 0 ? page === 0 : page === FOCUS_PAGES - 1;
             return (
-              <button
-                key={arrow}
-                onClick={() => goTo(page + (i === 0 ? -1 : 1))}
-                disabled={disabled}
-                style={{
-                  background: "none", border: "0.5px solid var(--bento-border)",
-                  borderRadius: 6, width: 22, height: 22,
-                  cursor: disabled ? "not-allowed" : "pointer",
-                  color: disabled ? "var(--bento-text-tertiary)" : "var(--bento-text-secondary)",
-                  fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center",
-                  opacity: disabled ? 0.4 : 1, transition: "opacity 0.15s",
-                }}
-              >{arrow}</button>
+              <button key={arrow} onClick={() => goTo(page + (i === 0 ? -1 : 1))} disabled={disabled} style={{
+                background: "none", border: "0.5px solid var(--bento-border)",
+                borderRadius: 6, width: 22, height: 22,
+                cursor: disabled ? "not-allowed" : "pointer",
+                color: disabled ? "var(--bento-text-tertiary)" : "var(--bento-text-secondary)",
+                fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center",
+                opacity: disabled ? 0.4 : 1, transition: "opacity 0.15s",
+              }}>{arrow}</button>
             );
           })}
         </div>
       </div>
 
-      {/* Slide track — pointer events on the track container */}
+      {/* Slide track */}
       <div
         style={{ overflow: "hidden", cursor: "grab", userSelect: "none" }}
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
+        onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
         onMouseDown={onMouseDown}
       >
         <div style={{
@@ -765,15 +743,21 @@ function FocusBoard() {
           transition: dragOffset === 0 ? "transform 0.28s cubic-bezier(0.4,0,0.2,1)" : "none",
           willChange: "transform",
         }}>
-          {Array.from({ length: FOCUS_PAGES }).map((_, pageIdx) => (
-            <div
-              key={pageIdx}
-              style={{ width: `${100 / FOCUS_PAGES}%`, display: "grid", gridTemplateColumns: "1fr 1fr" }}
-            >
-              <ImageSlot slotKey={`${pageIdx}-1`} data={slots[`${pageIdx}-1`]} onChange={updateSlot} />
-              <div style={{ borderLeft: "0.5px solid var(--bento-border)" }}>
-                <ImageSlot slotKey={`${pageIdx}-2`} data={slots[`${pageIdx}-2`]} onChange={updateSlot} />
-              </div>
+          {slots.map((pair, pageIdx) => (
+            <div key={pageIdx} style={{ width: `${100 / FOCUS_PAGES}%`, display: "grid", gridTemplateColumns: "1fr 1fr" }}>
+              {pair.map((slot, si) => (
+                <div key={si} style={{ borderLeft: si === 1 ? "0.5px solid var(--bento-border)" : "none" }}>
+                  <div style={{ minHeight: 280, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bento-surface)" }}>
+                    <img src={slot.src} alt={slot.label} draggable={false} onDragStart={e => e.preventDefault()} style={{ width: "100%", height: 280, objectFit: "contain" }} />
+                  </div>
+                  <div style={{
+                    padding: "10px 14px", borderTop: "0.5px solid var(--bento-border)",
+                    background: "var(--bento-bg)",
+                  }}>
+                    <div style={{ fontSize: 12, fontWeight: 500, color: "var(--bento-text-primary)" }}>{slot.label}</div>
+                  </div>
+                </div>
+              ))}
             </div>
           ))}
         </div>
