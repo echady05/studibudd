@@ -6,25 +6,13 @@ export default function LoginButton() {
 
   if (session) {
     return (
-      <div className="flex items-center gap-3">
-        {/* Profile Picture */}
-        {session.user?.image && (
-          <img 
-            src={session.user.image} 
-            alt={session.user.name || "User"} 
-            className="w-8 h-8 rounded-full border border-gray-200"
-          />
-        )}
-        <span className="text-sm font-medium hidden md:inline">
-          {session.user?.name}
-        </span>
-        <button 
-          onClick={() => signOut()} 
-          className="btn-logout ml-2"
-        >
-          Sign Out
-        </button>
-      </div>
+      <button 
+        onClick={() => signOut()} 
+        className="btn-logout"
+        style={{ fontSize: '12px', fontWeight: 600 }} // Optional: match your pill style
+      >
+        Sign Out
+      </button>
     );
   }
 

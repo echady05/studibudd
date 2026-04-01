@@ -770,8 +770,10 @@ function FocusBoard() {
 
 export default function BentoDashboard({ session }: BentoDashboardProps) {
   const [showGame, setShowGame] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
   const year = new Date().getFullYear();
   const initials = getInitials(session.user?.name);
+  
 
   return (
     <>
@@ -862,33 +864,70 @@ export default function BentoDashboard({ session }: BentoDashboardProps) {
             {/* Top bar */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ display: "flex", gap: 4 }}>
-                <a href="#game" className="bento-nav-link" onClick={() => setShowGame(true)}>Play</a>
                 <a href="#features" className="bento-nav-link">How it works</a>
-                <a href="#contact" className="bento-nav-link">Contact</a>
               </div>
-              <div style={{
-                background: "var(--bento-bg)",
-                border: "0.5px solid var(--bento-border)",
-                borderRadius: 40, padding: "6px 14px 6px 6px",
-                display: "flex", alignItems: "center", gap: 10,
-              }}>
-                {session.user?.image ? (
-                  <img src={session.user.image} alt={session.user.name ?? "Profile"} width={32} height={32} style={{ borderRadius: "50%", flexShrink: 0 }} />
-                ) : (
-                  <div style={{
-                    width: 32, height: 32, borderRadius: "50%",
-                    background: "#FAEEDA", display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 13, fontWeight: 600, color: "#412402", flexShrink: 0,
-                  }}>{initials}</div>
-                )}
-                <div>
-                  <div style={{ fontSize: 12, fontWeight: 500, color: "var(--bento-text-primary)" }}>{session.user?.name ?? "Student"}</div>
-                  <div style={{ fontSize: 10, color: "var(--bento-text-tertiary)" }}>Student</div>
-                </div>
-                <div style={{ marginLeft: 6 }}>
-                  <LoginButton />
-                </div>
-              </div>
+              <div
+  style={{ position: "relative" }}
+  onMouseEnter={() => setShowDropdown(true)}
+  onMouseLeave={() => setShowDropdown(false)}
+>
+  <div style={{
+    background: "var(--bento-bg)",
+    border: "0.5px solid var(--bento-border)",
+    borderRadius: 40, padding: "6px 14px 6px 6px",
+    display: "flex", alignItems: "center", gap: 10,
+    cursor: "default",
+  }}>
+    {session.user?.image ? (
+      <img src={session.user.image} alt={session.user.name ?? "Profile"} width={32} height={32} style={{ borderRadius: "50%", flexShrink: 0 }} />
+    ) : (
+      <div style={{
+        width: 32, height: 32, borderRadius: "50%",
+        background: "#FAEEDA", display: "flex", alignItems: "center", justifyContent: "center",
+        fontSize: 13, fontWeight: 600, color: "#412402", flexShrink: 0,
+      }}>{initials}</div>
+    )}
+    <div>
+      <div style={{ fontSize: 12, fontWeight: 500, color: "var(--bento-text-primary)" }}>{session.user?.name ?? "Student"}</div>
+      <div style={{ fontSize: 10, color: "var(--bento-text-tertiary)" }}>Student</div>
+    </div>
+    <div style={{ marginLeft: 6 }}>
+      <LoginButton />
+    </div>
+  </div>
+
+  {/* Dropdown */}
+  {showDropdown && (
+    <div style={{
+      position: "absolute", top: "calc(100% + 6px)", right: 0,
+      background: "var(--bento-bg)",
+      border: "0.5px solid var(--bento-border)",
+      borderRadius: 12, padding: "6px",
+      minWidth: 160, zIndex: 100,
+      boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+    }}>
+      {([
+  { label: "⚙️  Settings", href: "/settings" },
+  // Add future links here, e.g.:
+  // { label: "👤  Profile", href: "/profile" },
+  // { label: "📊  Stats",   href: "/stats"    },
+] as { label: string; href: string }[]).map(item => (
+        <a
+          key={item.href}
+          href={item.href}
+          style={{
+            display: "block", fontSize: 12,
+            color: "var(--bento-text-primary)",
+            textDecoration: "none", padding: "8px 12px",
+            borderRadius: 8, transition: "background 0.12s",
+          }}
+          onMouseEnter={e => (e.currentTarget.style.background = "var(--bento-surface)")}
+          onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+        >{item.label}</a>
+      ))}
+    </div>
+  )}
+</div>
             </div>
 
             {/* ── Focus Board ── */}
