@@ -858,148 +858,157 @@ export default function BentoDashboard({ session }: BentoDashboardProps) {
 
           </div>
 
-          {/* ══ RIGHT COLUMN ══ */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+{/* ══ RIGHT COLUMN ══ */}
+<div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
 
-            {/* Top bar */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ display: "flex", gap: 4 }}>
-                <a href="#features" className="bento-nav-link">How it works</a>
-              </div>
-              <div
-  style={{ position: "relative" }}
-  onMouseEnter={() => setShowDropdown(true)}
-  onMouseLeave={() => setShowDropdown(false)}
->
-  <div style={{
-    background: "var(--bento-bg)",
-    border: "0.5px solid var(--bento-border)",
-    borderRadius: 40, padding: "6px 14px 6px 6px",
-    display: "flex", alignItems: "center", gap: 10,
-    cursor: "default",
-  }}>
-    {session.user?.image ? (
-      <img src={session.user.image} alt={session.user.name ?? "Profile"} width={32} height={32} style={{ borderRadius: "50%", flexShrink: 0 }} />
-    ) : (
-      <div style={{
-        width: 32, height: 32, borderRadius: "50%",
-        background: "#FAEEDA", display: "flex", alignItems: "center", justifyContent: "center",
-        fontSize: 13, fontWeight: 600, color: "#412402", flexShrink: 0,
-      }}>{initials}</div>
-    )}
-    <div>
-      <div style={{ fontSize: 12, fontWeight: 500, color: "var(--bento-text-primary)" }}>{session.user?.name ?? "Student"}</div>
-      <div style={{ fontSize: 10, color: "var(--bento-text-tertiary)" }}>Student</div>
-    </div>
-    <div style={{ marginLeft: 6 }}>
-      <LoginButton />
-    </div>
+{/* Top bar */}
+<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+  <div style={{ display: "flex", gap: 4 }}>
+    <a href="#features" className="bento-nav-link">How it works</a>
   </div>
-
-  {/* Dropdown */}
-  {showDropdown && (
+  <div
+    style={{ position: "relative" }}
+    onMouseEnter={() => setShowDropdown(true)}
+    onMouseLeave={() => setShowDropdown(false)}
+  >
     <div style={{
-      position: "absolute", top: "calc(100% + 6px)", right: 0,
       background: "var(--bento-bg)",
       border: "0.5px solid var(--bento-border)",
-      borderRadius: 12, padding: "6px",
-      minWidth: 160, zIndex: 100,
-      boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+      borderRadius: 40, padding: "6px 14px 6px 6px",
+      display: "flex", alignItems: "center", gap: 10,
+      cursor: "default",
     }}>
-      {([
-  { label: "⚙️  Settings", href: "/settings" },
-  // Add future links here, e.g.:
-  // { label: "👤  Profile", href: "/profile" },
-  // { label: "📊  Stats",   href: "/stats"    },
-] as { label: string; href: string }[]).map(item => (
-        <a
-          key={item.href}
-          href={item.href}
-          style={{
-            display: "block", fontSize: 12,
-            color: "var(--bento-text-primary)",
-            textDecoration: "none", padding: "8px 12px",
-            borderRadius: 8, transition: "background 0.12s",
-          }}
-          onMouseEnter={e => (e.currentTarget.style.background = "var(--bento-surface)")}
-          onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-        >{item.label}</a>
-      ))}
-    </div>
-  )}
-</div>
-            </div>
-
-            {/* ── Focus Board ── */}
-            <FocusBoard />
-
-            {/* Game */}
-            {showGame && (
-              <div className="bento-card" id="game">
-                <div style={{
-                  display: "flex", alignItems: "center", justifyContent: "space-between",
-                  padding: "14px 18px 12px", borderBottom: "0.5px solid var(--bento-border)",
-                }}>
-                  <span style={{ fontSize: 13, fontWeight: 500, color: "var(--bento-text-primary)" }}>StudiBudd Game</span>
-                  <button onClick={() => setShowGame(false)} style={{
-                    fontSize: 11, color: "var(--bento-text-secondary)",
-                    background: "none", border: "0.5px solid var(--bento-border)",
-                    borderRadius: 6, padding: "3px 10px", cursor: "pointer",
-                  }}>Close</button>
-                </div>
-                <div style={{ padding: 20 }}>
-                  <StudyBuddyGame />
-                </div>
-              </div>
-            )}
-
-            {/* Features */}
-            <div className="bento-card" id="features" style={{ padding: "20px 24px" }}>
-              <div style={{ marginBottom: 16 }}>
-                <h2 style={{ fontSize: 16, fontWeight: 600, color: "var(--bento-text-primary)", margin: 0 }}>How it works</h2>
-                <p style={{ fontSize: 12, color: "var(--bento-text-secondary)", marginTop: 4 }}>Simple loops that turn studying into "one more mission".</p>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
-                {[
-                  { dot: "#1D9E75", title: "Choose an egg", text: "Pick the creatures you want to represent your courses" },
-                  { dot: "#378ADD", title: "Complete assignments", text: "Completing assignments produces XP for your egg." },
-                  { dot: "#BA7517", title: "Hatch & level up", text: "XP → levels → streak keeps going." },
-                ].map(f => (
-                  <div key={f.title} style={{ background: "var(--bento-surface)", borderRadius: 10, padding: "12px 14px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-                      <span style={{ width: 7, height: 7, borderRadius: "50%", background: f.dot, display: "inline-block", flexShrink: 0 }} />
-                      <span style={{ fontSize: 12, fontWeight: 500, color: "var(--bento-text-primary)" }}>{f.title}</span>
-                    </div>
-                    <p style={{ fontSize: 11, color: "var(--bento-text-secondary)", margin: 0, lineHeight: 1.5 }}>{f.text}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Contact */}
-            <div className="bento-card" id="contact" style={{ padding: "20px 24px" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-                <div>
-                  <h2 style={{ fontSize: 16, fontWeight: 600, color: "var(--bento-text-primary)", margin: 0 }}>Contact</h2>
-                  <p style={{ fontSize: 12, color: "var(--bento-text-secondary)", marginTop: 4, maxWidth: 380 }}>
-                    Want StudiBudd for your school? Email us and we'll build new subjects with you.
-                  </p>
-                </div>
-                <a href="mailto:studibuddcontact@gmail.com" style={{
-                  display: "inline-block", background: "#111827", color: "#fff",
-                  fontSize: 12, fontWeight: 500, padding: "8px 18px", borderRadius: 10, textDecoration: "none",
-                }}>Email StudiBudd</a>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div style={{ textAlign: "center", paddingBottom: 8 }}>
-              <span style={{ fontSize: 11, color: "var(--bento-text-tertiary)" }}>© {year} StudiBudd</span>
-            </div>
-
-          </div>
-        </div>
+      {session.user?.image ? (
+        <img src={session.user.image} alt={session.user.name ?? "Profile"} width={32} height={32} style={{ borderRadius: "50%", flexShrink: 0 }} />
+      ) : (
+        <div style={{
+          width: 32, height: 32, borderRadius: "50%",
+          background: "#FAEEDA", display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: 13, fontWeight: 600, color: "#412402", flexShrink: 0,
+        }}>{initials}</div>
+      )}
+      <div>
+        <div style={{ fontSize: 12, fontWeight: 500, color: "var(--bento-text-primary)" }}>{session.user?.name ?? "Student"}</div>
+        <div style={{ fontSize: 10, color: "var(--bento-text-tertiary)" }}>Student</div>
       </div>
-    </>
-  );
+      <div style={{ marginLeft: 6 }}>
+        <LoginButton />
+      </div>
+    </div>
+
+    {/* Invisible bridge — fills the gap so mouse doesn't leave hover zone */}
+    {showDropdown && (
+      <div style={{
+        position: "absolute",
+        top: "100%",
+        right: 0,
+        width: "100%",
+        height: 12,
+        zIndex: 99,
+      }} />
+    )}
+
+    {/* Dropdown */}
+    {showDropdown && (
+      <div style={{
+        position: "absolute", top: "calc(100% + 4px)", right: 0,
+        background: "var(--bento-bg)",
+        border: "0.5px solid var(--bento-border)",
+        borderRadius: 12, padding: "6px",
+        minWidth: 160, zIndex: 100,
+        boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+      }}>
+        {([
+          { label: "⚙️  Settings", href: "/settings" },
+        ] as { label: string; href: string }[]).map(item => (
+          <a
+            key={item.href}
+            href={item.href}
+            style={{
+              display: "block", fontSize: 12,
+              color: "var(--bento-text-primary)",
+              textDecoration: "none", padding: "8px 12px",
+              borderRadius: 8, transition: "background 0.12s",
+            }}
+            onMouseEnter={e => (e.currentTarget.style.background = "var(--bento-surface)")}
+            onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+          >{item.label}</a>
+        ))}
+      </div>
+    )}
+  </div>
+</div>
+
+{/* ── Focus Board ── */}
+<FocusBoard />
+
+{/* Game */}
+{showGame && (
+  <div className="bento-card" id="game">
+    <div style={{
+      display: "flex", alignItems: "center", justifyContent: "space-between",
+      padding: "14px 18px 12px", borderBottom: "0.5px solid var(--bento-border)",
+    }}>
+      <span style={{ fontSize: 13, fontWeight: 500, color: "var(--bento-text-primary)" }}>StudiBudd Game</span>
+      <button onClick={() => setShowGame(false)} style={{
+        fontSize: 11, color: "var(--bento-text-secondary)",
+        background: "none", border: "0.5px solid var(--bento-border)",
+        borderRadius: 6, padding: "3px 10px", cursor: "pointer",
+      }}>Close</button>
+    </div>
+    <div style={{ padding: 20 }}>
+      <StudyBuddyGame />
+    </div>
+  </div>
+)}
+
+{/* Features */}
+<div className="bento-card" id="features" style={{ padding: "20px 24px" }}>
+  <div style={{ marginBottom: 16 }}>
+    <h2 style={{ fontSize: 16, fontWeight: 600, color: "var(--bento-text-primary)", margin: 0 }}>How it works</h2>
+    <p style={{ fontSize: 12, color: "var(--bento-text-secondary)", marginTop: 4 }}>Simple loops that turn studying into "one more mission".</p>
+  </div>
+  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+    {[
+      { dot: "#1D9E75", title: "Choose an egg", text: "Pick the creatures you want to represent your courses" },
+      { dot: "#378ADD", title: "Complete assignments", text: "Completing assignments produces XP for your egg." },
+      { dot: "#BA7517", title: "Hatch & level up", text: "XP → levels → streak keeps going." },
+    ].map(f => (
+      <div key={f.title} style={{ background: "var(--bento-surface)", borderRadius: 10, padding: "12px 14px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+          <span style={{ width: 7, height: 7, borderRadius: "50%", background: f.dot, display: "inline-block", flexShrink: 0 }} />
+          <span style={{ fontSize: 12, fontWeight: 500, color: "var(--bento-text-primary)" }}>{f.title}</span>
+        </div>
+        <p style={{ fontSize: 11, color: "var(--bento-text-secondary)", margin: 0, lineHeight: 1.5 }}>{f.text}</p>
+      </div>
+    ))}
+  </div>
+</div>
+
+{/* Contact */}
+<div className="bento-card" id="contact" style={{ padding: "20px 24px" }}>
+  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+    <div>
+      <h2 style={{ fontSize: 16, fontWeight: 600, color: "var(--bento-text-primary)", margin: 0 }}>Contact</h2>
+      <p style={{ fontSize: 12, color: "var(--bento-text-secondary)", marginTop: 4, maxWidth: 380 }}>
+        Want StudiBudd for your school? Email us and we'll build new subjects with you.
+      </p>
+    </div>
+    <a href="mailto:studibuddcontact@gmail.com" style={{
+      display: "inline-block", background: "#111827", color: "#fff",
+      fontSize: 12, fontWeight: 500, padding: "8px 18px", borderRadius: 10, textDecoration: "none",
+    }}>Email StudiBudd</a>
+  </div>
+</div>
+
+{/* Footer */}
+<div style={{ textAlign: "center", paddingBottom: 8 }}>
+  <span style={{ fontSize: 11, color: "var(--bento-text-tertiary)" }}>© {year} StudiBudd</span>
+</div>
+
+</div>
+</div>
+</div>
+</>
+);
 }
