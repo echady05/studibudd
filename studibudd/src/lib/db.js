@@ -1,70 +1,97 @@
-import fs from "node:fs/promises";
-import path from "node:path";
+import { createClient } from '@supabase/supabase-js';
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const DB_FILE = path.join(DATA_DIR, "studibudd-db.json");
-
-let writeLock = Promise.resolve();
-
-async function ensureDataDir() {
-  await fs.mkdir(DATA_DIR, { recursive: true });
-}
-
-async function loadDb() {
-  await ensureDataDir();
-  try {
-    const raw = await fs.readFile(DB_FILE, "utf8");
-    const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== "object") throw new Error("Bad db");
-    return parsed;
-  } catch {
-    return { byEmail: {} };
-  }
-}
-
-function withDbWriteLock(fn) {
-  writeLock = writeLock.then(fn, fn);
-  return writeLock;
-}
-
-async function saveDb(db) {
-  await ensureDataDir();
-  const tmp = `${DB_FILE}.tmp`;
-  await fs.writeFile(tmp, JSON.stringify(db, null, 2), "utf8");
-  await fs.rename(tmp, DB_FILE);
-}
+// These must be set in your Vercel/Netlify Environment Variables
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY
+);
 
 export function normalizeEmail(email) {
   return String(email || "").trim().toLowerCase();
 }
 
-function defaultUserData() {
+/**
+ * Default data structure for a new user
+ */
+function defaultUserData(email) {
   return {
-    canvasUrl: null,
-    canvasToken: null,
-    progress: {
-      xp: 0,
-      streak: 0,
-      eggCount: 0,
-      subject: "science",
-      subjectProgress: { science: 0, math: 0, main: 0 },
-    },
+    email: normalizeEmail(email),
+    canvas_url: null,
+    canvas_token: null,
+    xp: 0,
+    streak: 0,
+    egg_count: 0,
+    subject: "science",
+    science_progress: 0,
+    math_progress: 0,
+    main_progress: 0
   };
 }
 
+/**
+ * Fetches user data from Supabase
+ */
 export async function getUserData(email) {
-  const db = await loadDb();
-  if (!db.byEmail) return null;
-  return db.byEmail[normalizeEmail(email)] || null;
+  const cleanEmail = normalizeEmail(email);
+  const { data, error } = await supabase
+    .from('user_connections')
+    .select('*')
+    .eq('email', cleanEmail)
+    .single();
+
+  if (error && error.code !== 'PGRST116') { // PGRST116 is "No rows found"
+    console.error("Supabase Fetch Error:", error);
+    return null;
+  }
+
+  // Map database snake_case back to your app's camelCase if needed,
+  // or just return the data object.
+  if (data) {
+    return {
+      ...data,
+      canvasUrl: data.canvas_url,
+      canvasToken: data.canvas_token
+    };
+  }
+  
+  return null;
 }
 
+/**
+ * Updates user data in Supabase
+ */
 export async function updateUserData(email, mutator) {
-  return withDbWriteLock(async () => {
-    const db = await loadDb();
-    if (!db.byEmail) db.byEmail = {};
-    const key = normalizeEmail(email);
-    if (!db.byEmail[key]) db.byEmail[key] = defaultUserData();
-    await mutator(db.byEmail[key]);
-    await saveDb(db);
-  });
+  const cleanEmail = normalizeEmail(email);
+  
+  // 1. Get current data or create default
+  let user = await getUserData(cleanEmail);
+  if (!user) {
+    user = defaultUserData(cleanEmail);
+  }
+
+  // 2. Run the mutator from your connect route
+  // The mutator will set user.canvasUrl and user.canvasToken
+  await mutator(user);
+
+  // 3. Prepare data for Supabase (mapping camelCase to snake_case)
+  const payload = {
+    email: cleanEmail,
+    canvas_url: user.canvasUrl,
+    canvas_token: user.canvasToken,
+    xp: user.xp || 0,
+    streak: user.streak || 0,
+    egg_count: user.egg_count || 0,
+    subject: user.subject || "science",
+    updated_at: new Date()
+  };
+
+  // 4. Save to Database
+  const { error } = await supabase
+    .from('user_connections')
+    .upsert(payload, { onConflict: 'email' });
+
+  if (error) {
+    console.error("Supabase Save Error:", error);
+    throw new Error("Failed to save to Supabase database");
+  }
 }

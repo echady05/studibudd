@@ -1,31 +1,80 @@
 import { getServerSession } from "next-auth";
 import LoginButton from "./LoginButton";
-import StudyBuddyGame from "./StudyBuddyGame";
 import BentoDashboard from "./BentoDashboard";
-
-const logoSrc =
-  "data:image/svg+xml;charset=utf-8," +
-  encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44"><rect width="44" height="44" rx="10" fill="#111827"/><text x="22" y="29" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#ffffff">S</text></svg>'
-  );
 
 export default async function Page() {
   const session = await getServerSession();
-  const year = new Date().getFullYear();
+
   if (!session) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-6 text-center">
-        <header className="mb-8">
-          <img src={logoSrc} alt="StudiBudd" width={80} height={80} className="mx-auto mb-4 rounded-xl shadow-lg" />
-          <h1 className="text-5xl font-bold text-gray-900 mb-2">StudiBudd</h1>
-          <p className="text-xl text-gray-600 italic">"Your motivation to stay on track"</p>
-        </header>
+      <main
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: 24,
+          boxSizing: "border-box",
+          textAlign: "center",
+          fontFamily: "'DM Sans', system-ui, sans-serif",
+          background:
+            "radial-gradient(1000px 520px at 10% -10%, rgba(202, 225, 238, 0.75), transparent 55%), radial-gradient(900px 460px at 92% 5%, rgba(46, 75, 88, 0.77), transparent 56%), linear-gradient(145deg, #0b1220 0%, #0f172a 42%, #111827 100%)",
+        }}
+      >
+        <div
+          style={{
+            width: "min(860px, 100%)",
+            borderRadius: 30,
+            border: "1px solid rgba(255,255,255,0.16)",
+            background:
+              "linear-gradient(180deg, rgba(112, 106, 106, 0.1) 0%, rgba(255,255,255,0.04) 100%)",
+            boxShadow: "0 28px 80px rgba(2, 6, 23, 0.65)",
+            backdropFilter: "blur(10px)",
+            padding: "36px 28px 34px",
+          }}
+        >
+          <img
+            src="pictures\studibuddlogo\studibuddeggbooks.png"
+            alt="StudiBudd logo"
+            width={920}
+            height={360}
+            style={{
+              width: "100%",
+              maxWidth: 760,
+              height: "auto",
+              display: "block",
+              margin: "0 auto 18px",
+              borderRadius: 20,
+              boxShadow: "0 20px 46px rgba(0,0,0,0.45)",
+            }}
+          />
+          <h1
+            style={{
+              margin: "0 0 8px",
+              fontSize: "clamp(2.5rem, 7vw, 4.5rem)",
+              fontWeight: 900,
+              letterSpacing: "-0.03em",
+              color: "#f8fafc",
+            }}
+          >
+            StudiBudd
+          </h1>
+          <p
+            style={{
+              margin: "0 0 24px",
+              color: "rgba(226,232,240,0.95)",
+              fontSize: "clamp(1.05rem, 2.1vw, 1.25rem)",
+              fontWeight: 600,
+            }}git status
+          >
+            Build momentum every single study session.
+          </p>
 
-        <div className="bg-white p-10 rounded-3xl shadow-2xl border border-gray-100 max-w-md w-full">
-          <p className="mb-8 text-gray-500">Sign in with your Google account to start hatching your focus missions.</p>
+          <p style={{ margin: "0 0 14px", color: "rgba(203,213,225,0.9)", fontSize: 14 }}>
+            Sign in to continue
+          </p>
           <LoginButton />
         </div>
-        <footer className="mt-12 text-gray-400 text-sm">© {year} StudiBudd</footer>
       </main>
     );
   }
