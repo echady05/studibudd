@@ -490,7 +490,7 @@ function CanvasConnect() {
                 <span style={{ fontSize: 13, fontWeight: 500, color: "var(--bento-text-primary)" }}>Go to your Canvas token page</span>
               </div>
               <img
-                src="/pictures/canvashelp/gentoken.png"
+                src="/pictures/canvashelp/gentokenbutton.png"
                 alt="How to generate a Canvas token"
                 style={{ width: "100%", borderRadius: 12, objectFit: "cover", marginBottom: 10 }}
               />
@@ -520,15 +520,15 @@ function CanvasConnect() {
                   fontSize: 11, fontWeight: 600,
                   display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
                 }}>3</span>
-                <span style={{ fontSize: 13, fontWeight: 500, color: "var(--bento-text-primary)" }}>Copy your token</span>
+                <span style={{ fontSize: 13, fontWeight: 500, color: "var(--bento-text-primary)" }}>Fill out the form</span>
               </div>
               <img
-                src="/pictures/canvashelp/copytoken.png"
+                src="/pictures/canvashelp/fillout.png"
                 alt="Copy your Canvas token"
                 style={{ width: "100%", borderRadius: 12, objectFit: "cover", marginBottom: 10 }}
               />
               <div style={{ fontSize: 10, color: "var(--bento-text-tertiary)" }}>
-                Copy it immediately — Canvas only shows it once.
+                Set your experation date and click generate
               </div>
             </div>
 
@@ -541,10 +541,10 @@ function CanvasConnect() {
                   fontSize: 11, fontWeight: 600,
                   display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
                 }}>4</span>
-                <span style={{ fontSize: 13, fontWeight: 500, color: "var(--bento-text-primary)" }}>Paste your token here</span>
+                <span style={{ fontSize: 13, fontWeight: 500, color: "var(--bento-text-primary)" }}>Copy and paste your token here</span>
               </div>
               <img
-                src="/pictures/canvashelp/fillout.png"
+                src="/pictures/canvashelp/copytoken.png"
                 alt="Paste token into StudiBudd"
                 style={{ width: "100%", borderRadius: 12, objectFit: "cover", marginBottom: 10 }}
               />
