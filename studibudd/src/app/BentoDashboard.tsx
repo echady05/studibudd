@@ -292,7 +292,7 @@ function Calendar() {
 }
 
 // ─── Canvas Connect ───────────────────────────────────────────────────────────
-
+import { useRouter } from "next/navigation";
 interface CanvasAssignment {
   id: number;
   name: string;
@@ -305,13 +305,18 @@ interface CanvasAssignment {
 }
 
 function CanvasConnect() {
+  const router = useRouter();
+
   const [status, setStatus] = useState<"loading" | "connected" | "disconnected">("loading");
   const [courseCount, setCourseCount] = useState(0);
-  const [showForm, setShowForm] = useState(false);
+  const [connectedName, setConnectedName] = useState("");
+  const [showModal, setShowModal] = useState(false);
   const [url, setUrl] = useState("https://canvas.newhaven.edu");
   const [token, setToken] = useState("");
   const [saving, setSaving] = useState(false);
+  const [verifying, setVerifying] = useState(false);
   const [error, setError] = useState("");
+  const [preview, setPreview] = useState<{ name: string; courseCount: number } | null>(null);
 
   useEffect(() => {
     fetch("/api/canvas/courses")
@@ -320,6 +325,7 @@ function CanvasConnect() {
         if (d.connected && Array.isArray(d.courses)) {
           setStatus("connected");
           setCourseCount(d.courses.length);
+          setConnectedName(d.userName ?? "");
         } else {
           setStatus("disconnected");
         }
@@ -327,22 +333,52 @@ function CanvasConnect() {
       .catch(() => setStatus("disconnected"));
   }, []);
 
-  async function connect(e: React.FormEvent) {
-    e.preventDefault();
+  function cleanCanvasUrl(raw: string) {
+    try {
+      const u = new URL(raw.trim().replace(/\/+$/, "").split("/courses")[0].split("/profile")[0]);
+      return `${u.protocol}//${u.host}`;
+    } catch {
+      return raw.trim();
+    }
+  }
+
+  async function verify() {
+    setError("");
+    setPreview(null);
+    const cleanUrl = cleanCanvasUrl(url);
+    if (!cleanUrl || !token.trim()) return;
+    setVerifying(true);
+    try {
+      const res = await fetch("/api/canvas/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ canvasUrl: cleanUrl, canvasToken: token.trim() }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) { setError(d.error || "Couldn't verify token — double-check it was copied fully."); return; }
+      setPreview({ name: d.userName, courseCount: d.courseCount });
+    } catch { setError("Network error — check your connection."); }
+    finally { setVerifying(false); }
+  }
+
+  async function connect() {
     setError("");
     setSaving(true);
+    const cleanUrl = cleanCanvasUrl(url);
     try {
       const res = await fetch("/api/canvas/connect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ canvasUrl: url.trim(), canvasToken: token.trim() }),
+        body: JSON.stringify({ canvasUrl: cleanUrl, canvasToken: token.trim() }),
       });
       const d = await res.json().catch(() => ({}));
       if (!res.ok) { setError(d.error || "Connection failed"); return; }
       setStatus("connected");
-      setCourseCount(d.courses?.length ?? 0);
-      setShowForm(false);
-      window.location.reload();
+      setCourseCount(d.courses?.length ?? preview?.courseCount ?? 0);
+      setConnectedName(preview?.name ?? "");
+      setShowModal(false);
+      setPreview(null);
+      router.refresh();
     } catch { setError("Network error"); }
     finally { setSaving(false); }
   }
@@ -351,83 +387,273 @@ function CanvasConnect() {
     await fetch("/api/canvas/connect", { method: "DELETE" });
     setStatus("disconnected");
     setCourseCount(0);
-    window.location.reload();
+    setConnectedName("");
+    router.refresh();
   }
-
-  const tokenPageUrl = `${url.trim().replace(/\/+$/, "")}/profile/settings#access_tokens_holder`;
 
   if (status === "loading") return null;
 
+  const tokenPageUrl = `${cleanCanvasUrl(url)}/profile/settings#access_tokens_holder`;
+
   return (
-    <div className="bento-card" style={{ padding: "14px 18px" }}>
-      {status === "connected" ? (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
-              <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#10b981", display: "inline-block" }} />
-              <span style={{ fontSize: 12, fontWeight: 500, color: "var(--bento-text-primary)" }}>Canvas connected</span>
-            </div>
-            <div style={{ fontSize: 11, color: "var(--bento-text-tertiary)" }}>{courseCount} course{courseCount !== 1 ? "s" : ""} loaded</div>
-          </div>
-          <button onClick={disconnect} style={{ fontSize: 11, color: "var(--bento-text-tertiary)", background: "none", border: "0.5px solid var(--bento-border)", borderRadius: 6, padding: "3px 10px", cursor: "pointer" }}>
-            Disconnect
-          </button>
-        </div>
-      ) : showForm ? (
-        <form onSubmit={connect} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          <div style={{ fontSize: 12, fontWeight: 500, color: "var(--bento-text-primary)", marginBottom: 2 }}>Connect Canvas</div>
-
-          {/* Step 1 */}
-          <div style={{ fontSize: 11, color: "var(--bento-text-secondary)", fontWeight: 500 }}>1. Your Canvas URL</div>
-          <input
-            type="url" required placeholder="https://yourschool.instructure.com"
-            value={url} onChange={e => setUrl(e.target.value)}
-            style={{ fontSize: 12, padding: "6px 10px", borderRadius: 8, border: "0.5px solid var(--bento-border-hover)", background: "var(--bento-surface)", color: "var(--bento-text-primary)", outline: "none", marginTop: -4 }}
-          />
-
-          {/* Step 2 */}
-          <div style={{ fontSize: 11, color: "var(--bento-text-secondary)", fontWeight: 500 }}>2. Open your Canvas token page</div>
-          <a
-            href={tokenPageUrl} target="_blank" rel="noopener noreferrer"
-            style={{ fontSize: 12, padding: "6px 10px", borderRadius: 8, border: "0.5px solid var(--bento-border-hover)", background: "var(--bento-surface)", color: "var(--bento-text-primary)", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: -4 }}
-          >
-            <span>Open Canvas Token Page</span>
-            <span style={{ fontSize: 10, opacity: 0.5 }}>opens in new tab ↗</span>
-          </a>
-          <div style={{ fontSize: 10, color: "var(--bento-text-tertiary)", marginTop: -6 }}>
-            Click &ldquo;+ New Access Token&rdquo;, give it any name, then copy the token it generates.
-          </div>
-
-          {/* Step 3 */}
-          <div style={{ fontSize: 11, color: "var(--bento-text-secondary)", fontWeight: 500 }}>3. Paste your token here</div>
-          <input
-            type="password" required placeholder="Paste token here"
-            value={token} onChange={e => setToken(e.target.value)}
-            style={{ fontSize: 12, padding: "6px 10px", borderRadius: 8, border: "0.5px solid var(--bento-border-hover)", background: "var(--bento-surface)", color: "var(--bento-text-primary)", outline: "none", marginTop: -4 }}
-          />
-
-          {error && <div style={{ fontSize: 11, color: "#dc2626", background: "rgba(220,38,38,0.07)", borderRadius: 6, padding: "5px 8px" }}>{error}</div>}
-          <div style={{ display: "flex", gap: 8 }}>
-            <button type="submit" disabled={saving} style={{ fontSize: 12, padding: "5px 14px", background: "#111827", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", flex: 1 }}>
-              {saving ? "Connecting..." : "Connect"}
-            </button>
-            <button type="button" onClick={() => setShowForm(false)} style={{ fontSize: 12, padding: "5px 14px", background: "none", border: "0.5px solid var(--bento-border)", borderRadius: 8, cursor: "pointer", color: "var(--bento-text-secondary)" }}>
-              Cancel
-            </button>
-          </div>
-        </form>
-      ) : (
-        <button
-          onClick={() => setShowForm(true)}
-          style={{ width: "100%", textAlign: "left", background: "none", border: "0.5px dashed var(--bento-border-hover)", borderRadius: 10, padding: "10px 14px", cursor: "pointer", color: "var(--bento-text-secondary)", fontSize: 12 }}
+    <>
+      {/* ── Backdrop + Modal ── */}
+      {showModal && (
+        <div
+          onClick={() => setShowModal(false)}
+          style={{
+            position: "fixed", inset: 0, zIndex: 200,
+            background: "rgba(0,0,0,0.4)",
+            backdropFilter: "blur(4px)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: 24,
+          }}
         >
-          + Connect Canvas to see real assignments &amp; courses
-        </button>
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: "var(--bento-bg)",
+              borderRadius: 20,
+              border: "0.5px solid var(--bento-border)",
+              boxShadow: "0 24px 60px rgba(0,0,0,0.18)",
+              width: "100%",
+              maxWidth: 520,
+              maxHeight: "90vh",
+              overflowY: "auto",
+              padding: "28px 28px 24px",
+              position: "relative",
+            }}
+          >
+            {/* Close button */}
+            <button
+              onClick={() => setShowModal(false)}
+              style={{
+                position: "absolute", top: 16, right: 16,
+                background: "var(--bento-surface)",
+                border: "0.5px solid var(--bento-border)",
+                borderRadius: 8, width: 28, height: 28,
+                cursor: "pointer", fontSize: 14,
+                color: "var(--bento-text-secondary)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}
+            >✕</button>
+
+            <div style={{ fontSize: 15, fontWeight: 600, color: "var(--bento-text-primary)", marginBottom: 4 }}>
+              Connect Canvas
+            </div>
+            <div style={{ fontSize: 12, color: "var(--bento-text-tertiary)", marginBottom: 24 }}>
+              Follow the steps below — takes about 60 seconds.
+            </div>
+
+            {/* ── Step 1 ── */}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                <span style={{
+                  width: 22, height: 22, borderRadius: "50%",
+                  background: "#111827", color: "#fff",
+                  fontSize: 11, fontWeight: 600,
+                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                }}>1</span>
+                <span style={{ fontSize: 13, fontWeight: 500, color: "var(--bento-text-primary)" }}>Enter your school's Canvas URL</span>
+              </div>
+              <img
+                src="/pictures/canvashelp/url.png"
+                alt="Canvas URL example"
+                style={{ width: "100%", borderRadius: 12, objectFit: "cover", marginBottom: 10 }}
+              />
+              <input
+                type="text"
+                placeholder="https://yourschool.instructure.com"
+                value={url}
+                onChange={e => { setUrl(e.target.value); setPreview(null); }}
+                style={{
+                  width: "100%", fontSize: 12, padding: "8px 12px",
+                  borderRadius: 10, border: "0.5px solid var(--bento-border-hover)",
+                  background: "var(--bento-surface)", color: "var(--bento-text-primary)",
+                  outline: "none", boxSizing: "border-box",
+                }}
+              />
+              <div style={{ fontSize: 10, color: "var(--bento-text-tertiary)", marginTop: 4 }}>
+                Paste anything — we'll clean up the URL automatically.
+              </div>
+            </div>
+
+            {/* ── Step 2 ── */}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                <span style={{
+                  width: 22, height: 22, borderRadius: "50%",
+                  background: "#111827", color: "#fff",
+                  fontSize: 11, fontWeight: 600,
+                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                }}>2</span>
+                <span style={{ fontSize: 13, fontWeight: 500, color: "var(--bento-text-primary)" }}>Go to your Canvas token page</span>
+              </div>
+              <img
+                src="/pictures/canvashelp/gentoken.png"
+                alt="How to generate a Canvas token"
+                style={{ width: "100%", borderRadius: 12, objectFit: "cover", marginBottom: 10 }}
+              />
+              <a
+                href={tokenPageUrl} target="_blank" rel="noopener noreferrer"
+                style={{
+                  fontSize: 12, padding: "8px 12px", borderRadius: 10,
+                  border: "0.5px solid var(--bento-border-hover)",
+                  background: "var(--bento-surface)", color: "var(--bento-text-primary)",
+                  textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "space-between",
+                }}
+              >
+                <span>Open Canvas Token Page</span>
+                <span style={{ fontSize: 11, opacity: 0.5 }}>opens in new tab ↗</span>
+              </a>
+              <div style={{ fontSize: 10, color: "var(--bento-text-tertiary)", marginTop: 4 }}>
+                Account → Settings → scroll to <em>Approved Integrations</em> → click <strong>+ New Access Token</strong>.
+              </div>
+            </div>
+
+            {/* ── Step 3 ── */}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                <span style={{
+                  width: 22, height: 22, borderRadius: "50%",
+                  background: "#111827", color: "#fff",
+                  fontSize: 11, fontWeight: 600,
+                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                }}>3</span>
+                <span style={{ fontSize: 13, fontWeight: 500, color: "var(--bento-text-primary)" }}>Copy your token</span>
+              </div>
+              <img
+                src="/pictures/canvashelp/copytoken.png"
+                alt="Copy your Canvas token"
+                style={{ width: "100%", borderRadius: 12, objectFit: "cover", marginBottom: 10 }}
+              />
+              <div style={{ fontSize: 10, color: "var(--bento-text-tertiary)" }}>
+                Copy it immediately — Canvas only shows it once.
+              </div>
+            </div>
+
+            {/* ── Step 4 ── */}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                <span style={{
+                  width: 22, height: 22, borderRadius: "50%",
+                  background: "#111827", color: "#fff",
+                  fontSize: 11, fontWeight: 600,
+                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                }}>4</span>
+                <span style={{ fontSize: 13, fontWeight: 500, color: "var(--bento-text-primary)" }}>Paste your token here</span>
+              </div>
+              <img
+                src="/pictures/canvashelp/fillout.png"
+                alt="Paste token into StudiBudd"
+                style={{ width: "100%", borderRadius: 12, objectFit: "cover", marginBottom: 10 }}
+              />
+              <input
+                type="password"
+                placeholder="Paste token here"
+                value={token}
+                onChange={e => { setToken(e.target.value); setPreview(null); }}
+                style={{
+                  width: "100%", fontSize: 12, padding: "8px 12px",
+                  borderRadius: 10, border: "0.5px solid var(--bento-border-hover)",
+                  background: "var(--bento-surface)", color: "var(--bento-text-primary)",
+                  outline: "none", boxSizing: "border-box",
+                }}
+              />
+              <div style={{ fontSize: 10, color: "var(--bento-text-tertiary)", marginTop: 4 }}>
+                Paste the token you just copied from Canvas.
+              </div>
+            </div>
+
+            {/* Error */}
+            {error && (
+              <div style={{ fontSize: 11, color: "#dc2626", background: "rgba(220,38,38,0.07)", borderRadius: 8, padding: "8px 12px", marginBottom: 12 }}>
+                {error}
+              </div>
+            )}
+
+            {/* Preview success */}
+            {preview && (
+              <div style={{ fontSize: 11, color: "#1D9E75", background: "rgba(29,158,117,0.08)", borderRadius: 8, padding: "8px 12px", marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>
+                <span>✓</span>
+                <span>Found <strong>{preview.courseCount} courses</strong> for <strong>{preview.name}</strong> — looks good!</span>
+              </div>
+            )}
+
+            {/* Buttons */}
+            <div style={{ display: "flex", gap: 8 }}>
+              {!preview ? (
+                <button
+                  onClick={verify}
+                  disabled={verifying || !token.trim()}
+                  style={{
+                    fontSize: 12, padding: "8px 14px",
+                    background: "var(--bento-surface)", color: "var(--bento-text-primary)",
+                    border: "0.5px solid var(--bento-border-hover)",
+                    borderRadius: 10, cursor: verifying || !token.trim() ? "not-allowed" : "pointer",
+                    flex: 1, opacity: !token.trim() ? 0.5 : 1,
+                  }}
+                >
+                  {verifying ? "Verifying..." : "Verify Token"}
+                </button>
+              ) : (
+                <button
+                  onClick={connect}
+                  disabled={saving}
+                  style={{
+                    fontSize: 12, padding: "8px 14px",
+                    background: "#111827", color: "#fff",
+                    border: "none", borderRadius: 10, cursor: "pointer", flex: 1,
+                  }}
+                >
+                  {saving ? "Connecting..." : "Save & Connect"}
+                </button>
+              )}
+              <button
+                onClick={() => { setShowModal(false); setPreview(null); setError(""); }}
+                style={{
+                  fontSize: 12, padding: "8px 14px",
+                  background: "none", border: "0.5px solid var(--bento-border)",
+                  borderRadius: 10, cursor: "pointer", color: "var(--bento-text-secondary)",
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+
+          </div>
+        </div>
       )}
-    </div>
+
+      {/* ── Card trigger ── */}
+      <div className="bento-card" style={{ padding: "14px 18px" }}>
+        {status === "connected" ? (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
+                <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#10b981", display: "inline-block" }} />
+                <span style={{ fontSize: 12, fontWeight: 500, color: "var(--bento-text-primary)" }}>Canvas connected</span>
+              </div>
+              <div style={{ fontSize: 11, color: "var(--bento-text-tertiary)" }}>
+                {connectedName && `${connectedName} · `}{courseCount} course{courseCount !== 1 ? "s" : ""} loaded
+              </div>
+            </div>
+            <button onClick={disconnect} style={{ fontSize: 11, color: "var(--bento-text-tertiary)", background: "none", border: "0.5px solid var(--bento-border)", borderRadius: 6, padding: "3px 10px", cursor: "pointer" }}>
+              Disconnect
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setShowModal(true)}
+            style={{ width: "100%", textAlign: "left", background: "none", border: "0.5px dashed var(--bento-border-hover)", borderRadius: 10, padding: "10px 14px", cursor: "pointer", color: "var(--bento-text-secondary)", fontSize: 12 }}
+          >
+            + Connect Canvas to see real assignments &amp; courses
+          </button>
+        )}
+      </div>
+    </>
   );
 }
-
 // ─── Assignments ──────────────────────────────────────────────────────────────
 
 function Assignments() {
