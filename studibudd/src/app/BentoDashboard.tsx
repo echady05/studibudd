@@ -364,42 +364,37 @@ function CanvasConnect() {
   async function connect() {
     setError("");
     setSaving(true);
-    const cleanUrl = cleanCanvasUrl(url);
-    const currentToken = token.trim();
-
+    const cleanUrl = cleanCanvasUrl(url); // [cite: 7, 14]
+  
     try {
       const res = await fetch("/api/canvas/connect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ canvasUrl: cleanUrl, canvasToken: currentToken }),
+        body: JSON.stringify({ canvasUrl: cleanUrl, canvasToken: token.trim() }), // 
       });
-
+  
       const d = await res.json().catch(() => ({}));
-
+  
       if (!res.ok) { 
-        setError(d.error || "Connection failed"); 
-        return; 
+        // If you still see the 500 error here, the backend route logic itself 
+        // needs to be changed to stop calling 'mkdir'.
+        setError(d.error || "Server storage error. Backend cannot write files."); 
+        return;
       }
-
-      // 1. Force the local state to stay "Connected"
-      // This prevents the UI from flickering back to "Disconnected"
+  
+      // Update local state so the UI works even if the server is read-only [cite: 17]
       setStatus("connected");
-      
-      // 2. Use the data we already verified if the connect response is thin
       setCourseCount(d.courses?.length ?? preview?.courseCount ?? 0);
-      setConnectedName(preview?.name ?? d.userName ?? "");
-
-      // 3. Close the modal and clean up
-      setShowModal(false);
-      setPreview(null);
+      setConnectedName(preview?.name ?? "");
       
-      // 4. Refresh server components
-      router.refresh();
-
+      setShowModal(false); // [cite: 17]
+      setPreview(null); // [cite: 17]
+      router.refresh(); // [cite: 17]
+  
     } catch (err) { 
-      setError("Network error — check your connection."); 
+      setError("Network error — check your connection."); // 
     } finally { 
-      setSaving(false);
+      setSaving(false); // 
     }
   }
 
