@@ -849,33 +849,81 @@ function ImageSlot({ slotKey, data, onChange }: {
 }
 
 // ─── Focus Board ──────────────────────────────────────────────────────────────
-
 function FocusBoard() {
   const [page, setPage] = useState(0);
+  const [canvasAssignments, setCanvasAssignments] = useState<CanvasAssignment[]>([]);
+  const [courses, setCourses] = useState<{ id: number; name: string; code: string }[]>([]);
+  const [order, setOrder] = useState<number[]>([]);
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
 
-  const slots = [
-    [
-      { src: "pictures/buddies/beige/beige-egg.png", label: "Beige Egg" },
-      { src: "pictures/buddies/blue/blue-egg.png",  label: "Blue Egg"  },
-    ],
-    [
-      { src: "pictures/buddies/green/green-egg.png", label: "Green Egg" },
-      { src: "pictures/buddies/grey/grey-egg.png",   label: "Grey Egg"  },
-    ],
-    [
-      { src: "pictures/buddies/pink/pink-egg.png", label: "Pink Egg" },
-      { src: "pictures/buddies/red/red-egg.png",   label: "Red Egg"  },
-    ],
+  const EGG_IMAGES = [
+    { src: "pictures/buddies/beige/beige-egg.png", label: "Beige Egg" },
+    { src: "pictures/buddies/blue/blue-egg.png",   label: "Blue Egg"  },
+    { src: "pictures/buddies/green/green-egg.png", label: "Green Egg" },
+    { src: "pictures/buddies/grey/grey-egg.png",   label: "Grey Egg"  },
+    { src: "pictures/buddies/pink/pink-egg.png",   label: "Pink Egg"  },
+    { src: "pictures/buddies/red/red-egg.png",     label: "Red Egg"   },
   ];
 
+  useEffect(() => {
+    fetch("/api/canvas/courses")
+      .then(r => r.json())
+      .then(d => {
+        if (d.connected && Array.isArray(d.courses)) {
+          setCourses(d.courses);
+          setOrder(d.courses.map((_: any, i: number) => i));
+        }
+      })
+      .catch(() => {});
+
+    fetch("/api/canvas/assignments")
+      .then(r => r.json())
+      .then(d => {
+        if (d.connected && Array.isArray(d.assignments)) setCanvasAssignments(d.assignments);
+      })
+      .catch(() => {});
+  }, []);
+
+  const slots = order.map((originalIdx) => ({
+    src: EGG_IMAGES[originalIdx % EGG_IMAGES.length].src,
+    label: EGG_IMAGES[originalIdx % EGG_IMAGES.length].label,
+    course: courses[originalIdx]?.name ?? "",
+    courseCode: courses[originalIdx]?.code ?? "",
+  }));
+
+  const pages: typeof slots[] = [];
+  for (let i = 0; i < slots.length; i += 2) pages.push(slots.slice(i, i + 2));
+  const totalPages = Math.max(pages.length, 1);
+
+  const assignmentsForCourse = (courseName: string) =>
+    canvasAssignments.filter(a =>
+      a.courseName?.toLowerCase().includes(courseName.toLowerCase()) ||
+      courseName.toLowerCase().includes(a.courseName?.toLowerCase() ?? "____")
+    ).slice(0, 3);
+
+  // Drag handlers
+  const onThumbDragStart = (i: number) => setDragIdx(i);
+  const onThumbDragOver  = (e: React.DragEvent, i: number) => { e.preventDefault(); setDragOverIdx(i); };
+  const onThumbDrop      = (i: number) => {
+    if (dragIdx === null || dragIdx === i) { setDragIdx(null); setDragOverIdx(null); return; }
+    const next = [...order];
+    const [moved] = next.splice(dragIdx, 1);
+    next.splice(i, 0, moved);
+    setOrder(next);
+    setDragIdx(null);
+    setDragOverIdx(null);
+  };
+
+  // Swipe / drag for main slide track
   const touchStartX = useRef<number | null>(null);
-  const dragStartX = useRef<number | null>(null);
+  const dragStartX  = useRef<number | null>(null);
   const [dragOffset, setDragOffset] = useState(0);
 
   const goTo = useCallback((p: number) => {
-    setPage(Math.max(0, Math.min(FOCUS_PAGES - 1, p)));
+    setPage(Math.max(0, Math.min(totalPages - 1, p)));
     setDragOffset(0);
-  }, []);
+  }, [totalPages]);
 
   const onTouchStart = (e: React.TouchEvent) => { touchStartX.current = e.touches[0].clientX; };
   const onTouchMove  = (e: React.TouchEvent) => {
@@ -883,7 +931,7 @@ function FocusBoard() {
     setDragOffset(e.touches[0].clientX - touchStartX.current);
   };
   const onTouchEnd = () => {
-    if (dragOffset < -60 && page < FOCUS_PAGES - 1) goTo(page + 1);
+    if (dragOffset < -60 && page < totalPages - 1) goTo(page + 1);
     else if (dragOffset > 60 && page > 0) goTo(page - 1);
     else setDragOffset(0);
     touchStartX.current = null;
@@ -896,13 +944,13 @@ function FocusBoard() {
 
   const handleMouseUp = useCallback((e: MouseEvent) => {
     const dx = dragStartX.current !== null ? e.clientX - dragStartX.current : 0;
-    if (dx < -60 && page < FOCUS_PAGES - 1) goTo(page + 1);
+    if (dx < -60 && page < totalPages - 1) goTo(page + 1);
     else if (dx > 60 && page > 0) goTo(page - 1);
     else setDragOffset(0);
     dragStartX.current = null;
     window.removeEventListener("mousemove", handleMouseMove);
     window.removeEventListener("mouseup", handleMouseUp);
-  }, [page, goTo, handleMouseMove]);
+  }, [page, goTo, handleMouseMove, totalPages]);
 
   const onMouseDown = (e: React.MouseEvent) => {
     dragStartX.current = e.clientX;
@@ -915,48 +963,91 @@ function FocusBoard() {
     window.removeEventListener("mouseup", handleMouseUp);
   }, [handleMouseMove, handleMouseUp]);
 
-  const PAGE_LABELS = ["Page 1", "Page 2", "Page 3"];
+  if (courses.length === 0) {
+    return (
+      <div className="bento-card" style={{ padding: "32px 24px", textAlign: "center" }}>
+        <div style={{ fontSize: 13, fontWeight: 500, color: "var(--bento-text-primary)", marginBottom: 6 }}>Courses</div>
+        <div style={{ fontSize: 12, color: "var(--bento-text-tertiary)" }}>Connect Canvas to see your courses here</div>
+      </div>
+    );
+  }
 
   return (
     <div className="bento-card" style={{ overflow: "hidden" }}>
-      {/* Header */}
+      {/* ── HEADER WITH INTEGRATED THUMBNAILS ── */}
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "14px 18px 12px",
+        padding: "8px 18px",
         borderBottom: "0.5px solid var(--bento-border)",
+        background: "var(--bento-bg)",
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ fontSize: 13, fontWeight: 500, color: "var(--bento-text-primary)" }}>Courses</span>
-          <span style={{ fontSize: 11, color: "var(--bento-text-tertiary)" }}>{PAGE_LABELS[page]}</span>
+        {/* Left Side: Title & Page Count */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: "fit-content" }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: "var(--bento-text-primary)" }}>Courses</span>
+          <span style={{ fontSize: 10, color: "var(--bento-text-tertiary)" }}>{page + 1} / {totalPages}</span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-            {Array.from({ length: FOCUS_PAGES }).map((_, i) => (
-              <button key={i} onClick={() => goTo(i)} style={{
-                width: i === page ? 20 : 6, height: 6, borderRadius: 3,
-                background: i === page ? "#111827" : "var(--bento-border-hover)",
-                border: "none", cursor: "pointer", padding: 0,
-                transition: "width 0.22s cubic-bezier(0.4,0,0.2,1), background 0.22s",
-              }} />
-            ))}
-          </div>
-          {["‹","›"].map((arrow, i) => {
-            const disabled = i === 0 ? page === 0 : page === FOCUS_PAGES - 1;
+
+        {/* Center: THE DRAGGABLE THUMBNAILS */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: 5,
+          overflowX: "auto", flex: 1, margin: "0 15px",
+          scrollbarWidth: "none",
+        }}>
+          {slots.map((slot, i) => {
+            const isOnCurrentPage = Math.floor(i / 2) === page;
+            const isDragging = dragIdx === i;
+            const isTarget = dragOverIdx === i && dragIdx !== i;
             return (
-              <button key={arrow} onClick={() => goTo(page + (i === 0 ? -1 : 1))} disabled={disabled} style={{
-                background: "none", border: "0.5px solid var(--bento-border)",
-                borderRadius: 6, width: 22, height: 22,
-                cursor: disabled ? "not-allowed" : "pointer",
-                color: disabled ? "var(--bento-text-tertiary)" : "var(--bento-text-secondary)",
-                fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center",
-                opacity: disabled ? 0.4 : 1, transition: "opacity 0.15s",
-              }}>{arrow}</button>
+              <div
+                key={i}
+                draggable
+                onDragStart={() => onThumbDragStart(i)}
+                onDragOver={e => onThumbDragOver(e, i)}
+                onDrop={() => onThumbDrop(i)}
+                onDragEnd={() => { setDragIdx(null); setDragOverIdx(null); }}
+                onClick={() => goTo(Math.floor(i / 2))}
+                style={{
+                  flexShrink: 0, width: 32, height: 32, borderRadius: 6,
+                  background: "var(--bento-surface)",
+                  border: isTarget ? "2px solid #111827" : isOnCurrentPage ? "1.5px solid var(--bento-text-primary)" : "0.5px solid var(--bento-border)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  cursor: "grab", opacity: isDragging ? 0.3 : 1,
+                  transform: isTarget ? "scale(1.1)" : "scale(1)",
+                  transition: "all 0.15s ease",
+                }}
+              >
+                <img src={slot.src} alt="" style={{ width: 24, height: 24, objectFit: "contain" }} draggable={false} />
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Right Side: Navigation Arrows */}
+        <div style={{ display: "flex", gap: 6 }}>
+          {["‹", "›"].map((arrow, i) => {
+            const disabled = i === 0 ? page === 0 : page === totalPages - 1;
+            return (
+              <button 
+                key={arrow} 
+                onClick={() => goTo(page + (i === 0 ? -1 : 1))} 
+                disabled={disabled} 
+                style={{
+                  background: "none", border: "0.5px solid var(--bento-border)",
+                  borderRadius: 6, width: 24, height: 24,
+                  cursor: disabled ? "not-allowed" : "pointer",
+                  color: disabled ? "var(--bento-text-tertiary)" : "var(--bento-text-secondary)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  opacity: disabled ? 0.4 : 1,
+                }}
+              >
+                {arrow}
+              </button>
             );
           })}
         </div>
       </div>
 
-      {/* Slide track */}
+      {/* ── Slide track ── */}
       <div
         style={{ overflow: "hidden", cursor: "grab", userSelect: "none" }}
         onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
@@ -964,26 +1055,66 @@ function FocusBoard() {
       >
         <div style={{
           display: "flex",
-          width: `${FOCUS_PAGES * 100}%`,
-          transform: `translateX(calc(${(-page / FOCUS_PAGES) * 100}% + ${dragOffset / FOCUS_PAGES}px))`,
+          width: `${totalPages * 100}%`,
+          transform: `translateX(calc(${(-page / totalPages) * 100}% + ${dragOffset / totalPages}px))`,
           transition: dragOffset === 0 ? "transform 0.28s cubic-bezier(0.4,0,0.2,1)" : "none",
           willChange: "transform",
         }}>
-          {slots.map((pair, pageIdx) => (
-            <div key={pageIdx} style={{ width: `${100 / FOCUS_PAGES}%`, display: "grid", gridTemplateColumns: "1fr 1fr" }}>
-              {pair.map((slot, si) => (
-                <div key={si} style={{ borderLeft: si === 1 ? "0.5px solid var(--bento-border)" : "none" }}>
-                  <div style={{ minHeight: 280, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bento-surface)" }}>
-                    <img src={slot.src} alt={slot.label} draggable={false} onDragStart={e => e.preventDefault()} style={{ width: "100%", height: 280, objectFit: "contain" }} />
-                  </div>
-                  <div style={{
-                    padding: "10px 14px", borderTop: "0.5px solid var(--bento-border)",
-                    background: "var(--bento-bg)",
+          {pages.map((pair, pageIdx) => (
+            <div key={pageIdx} style={{ width: `${100 / totalPages}%`, display: "grid", gridTemplateColumns: pair.length === 1 ? "1fr" : "1fr 1fr" }}>
+              {pair.map((slot, si) => {
+                const courseAssignments = assignmentsForCourse(slot.course);
+                return (
+                  <div key={si} style={{
+                    borderLeft: si === 1 ? "0.5px solid var(--bento-border)" : "none",
+                    display: "flex", flexDirection: "column",
                   }}>
-                    <div style={{ fontSize: 12, fontWeight: 500, color: "var(--bento-text-primary)" }}>{slot.label}</div>
+                    {/* Top: course name */}
+                    <div style={{
+                      padding: "10px 14px 8px",
+                      borderBottom: "0.5px solid var(--bento-border)",
+                      background: "var(--bento-bg)",
+                      textAlign: "center",
+                    }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "var(--bento-text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {slot.course}
+                      </div>
+                      <div style={{ fontSize: 10, color: "var(--bento-text-tertiary)", marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {slot.courseCode}
+                      </div>
+                    </div>
+
+                    {/* Image */}
+                    <div style={{ height: 220, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bento-surface)" }}>
+                      <img
+                        src={slot.src} alt={slot.label} draggable={false}
+                        onDragStart={e => e.preventDefault()}
+                        style={{ width: "100%", height: 220, objectFit: "contain" }}
+                      />
+                    </div>
+
+                    {/* Bottom: Coming Soon + assignments */}
+                    <div style={{ padding: "10px 14px", borderTop: "0.5px solid var(--bento-border)", background: "var(--bento-bg)", flex: 1 }}>
+                      <div style={{ fontSize: 11, fontWeight: 500, color: "var(--bento-text-secondary)", marginBottom: 6 }}>Coming Soon</div>
+                      {courseAssignments.length > 0 ? (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                          {courseAssignments.map(a => (
+                            <div key={a.id} style={{ display: "flex", alignItems: "flex-start", gap: 5, padding: "5px 7px", background: "var(--bento-surface)", borderRadius: 7 }}>
+                              <span style={{ width: 5, height: 5, borderRadius: "50%", background: a.urgent ? "#993C1D" : "#378ADD", flexShrink: 0, marginTop: 3 }} />
+                              <div style={{ minWidth: 0 }}>
+                                <div style={{ fontSize: 10, fontWeight: 500, color: "var(--bento-text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{a.name}</div>
+                                <div style={{ fontSize: 9, color: a.urgent ? "#993C1D" : "var(--bento-text-tertiary)", marginTop: 1 }}>{a.dueLabel}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div style={{ fontSize: 10, color: "var(--bento-text-tertiary)" }}>No upcoming assignments</div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ))}
         </div>
@@ -991,7 +1122,6 @@ function FocusBoard() {
     </div>
   );
 }
-
 // ─── Main Dashboard ───────────────────────────────────────────────────────────
 
 export default function BentoDashboard({ session }: BentoDashboardProps) {
@@ -1192,7 +1322,7 @@ export default function BentoDashboard({ session }: BentoDashboardProps) {
 <div className="bento-card" id="features" style={{ padding: "20px 24px" }}>
   <div style={{ marginBottom: 16 }}>
     <h2 style={{ fontSize: 16, fontWeight: 600, color: "var(--bento-text-primary)", margin: 0 }}>How it works</h2>
-    <p style={{ fontSize: 12, color: "var(--bento-text-secondary)", marginTop: 4 }}>Simple loops that turn studying into "one more mission".</p>
+    <p style={{ fontSize: 12, color: "var(--bento-text-secondary)", marginTop: 4 }}>Find the motivation to stay on track by growing with a buddy.</p>
   </div>
   <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
     {[
