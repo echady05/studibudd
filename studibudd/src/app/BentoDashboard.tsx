@@ -365,22 +365,42 @@ function CanvasConnect() {
     setError("");
     setSaving(true);
     const cleanUrl = cleanCanvasUrl(url);
+    const currentToken = token.trim();
+
     try {
       const res = await fetch("/api/canvas/connect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ canvasUrl: cleanUrl, canvasToken: token.trim() }),
+        body: JSON.stringify({ canvasUrl: cleanUrl, canvasToken: currentToken }),
       });
+
       const d = await res.json().catch(() => ({}));
-      if (!res.ok) { setError(d.error || "Connection failed"); return; }
+
+      if (!res.ok) { 
+        setError(d.error || "Connection failed"); 
+        return; 
+      }
+
+      // 1. Force the local state to stay "Connected"
+      // This prevents the UI from flickering back to "Disconnected"
       setStatus("connected");
+      
+      // 2. Use the data we already verified if the connect response is thin
       setCourseCount(d.courses?.length ?? preview?.courseCount ?? 0);
-      setConnectedName(preview?.name ?? "");
+      setConnectedName(preview?.name ?? d.userName ?? "");
+
+      // 3. Close the modal and clean up
       setShowModal(false);
       setPreview(null);
+      
+      // 4. Refresh server components
       router.refresh();
-    } catch { setError("Network error"); }
-    finally { setSaving(false); }
+
+    } catch (err) { 
+      setError("Network error — check your connection."); 
+    } finally { 
+      setSaving(false);
+    }
   }
 
   async function disconnect() {
