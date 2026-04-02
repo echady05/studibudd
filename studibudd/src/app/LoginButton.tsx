@@ -6,46 +6,20 @@ export default function LoginButton() {
 
   if (session) {
     return (
-      <button
-        onClick={() => signOut()}
-        style={{
-          fontSize: 12, fontWeight: 500,
-          color: "var(--bento-text-secondary)",
-          background: "transparent",
-          border: "0.5px solid var(--bento-border)",
-          borderRadius: 8,
-          padding: "5px 12px",
-          cursor: "pointer",
-          transition: "background 0.15s, color 0.15s",
-        }}
-        onMouseEnter={e => {
-          (e.currentTarget as HTMLButtonElement).style.background = "#fee2e2";
-          (e.currentTarget as HTMLButtonElement).style.color = "#dc2626";
-          (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(220,38,38,0.3)";
-        }}
-        onMouseLeave={e => {
-          (e.currentTarget as HTMLButtonElement).style.background = "transparent";
-          (e.currentTarget as HTMLButtonElement).style.color = "var(--bento-text-secondary)";
-          (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--bento-border)";
-        }}
+      <button 
+        onClick={() => signOut()} 
+        className="btn-logout"
+        style={{ fontSize: '12px', fontWeight: 600 }} // Optional: match your pill style
       >
-        Sign out
+        Sign Out
       </button>
     );
   }
 
   return (
-    <button
-      onClick={() => signIn("google", { callbackUrl: "/" })}
-      style={{
-        fontSize: 12, fontWeight: 500,
-        color: "#fff",
-        background: "#111827",
-        border: "none",
-        borderRadius: 8,
-        padding: "5px 14px",
-        cursor: "pointer",
-      }}
+    <button 
+      onClick={() => signIn("google", { callbackUrl: '/' })} 
+      className="btn-login"
     >
       Sign in with Google
     </button>
