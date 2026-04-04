@@ -18,19 +18,22 @@ export default async function Page() {
           textAlign: "center",
           fontFamily: "'DM Sans', system-ui, sans-serif",
           background:
-            "radial-gradient(1000px 520px at 10% -10%, rgba(202, 225, 238, 0.75), transparent 55%), radial-gradient(900px 460px at 92% 5%, rgba(46, 75, 88, 0.77), transparent 56%), linear-gradient(145deg, #0b1220 0%, #0f172a 42%, #111827 100%)",
+            "radial-gradient(900px 500px at 20% 0%, rgb(88, 81, 63), transparent 60%), radial-gradient(800px 500px at 85% 10%, rgb(88, 81, 63), transparent 60%), linear-gradient(160deg, rgb(88, 81, 63) 0%, rgb(88, 81, 63) 40%, rgb(88, 81, 63) 100%)",
         }}
       >
         <div
           style={{
             width: "min(860px, 100%)",
             borderRadius: 30,
-            border: "1px solid rgba(255,255,255,0.16)",
+            border: "1px solid rgba(128, 127, 127, 0.6)",
             background:
-              "linear-gradient(180deg, rgba(112, 106, 106, 0.1) 0%, rgba(255,255,255,0.04) 100%)",
-            boxShadow: "0 28px 80px rgba(2, 6, 23, 0.65)",
-            backdropFilter: "blur(10px)",
+              "linear-gradient(180deg, rgba(172, 169, 162, 0.92) 0%, rgba(130, 123, 108, 0.92) 100%)",
+            boxShadow: "0 24px 70px rgba(0, 0, 0, 0.41)",
+            backdropFilter: "blur(14px)",
+            WebkitBackdropFilter: "blur(14px)",
             padding: "36px 28px 34px",
+            overflow: "hidden",
+            isolation: "isolate",
           }}
         >
           <img
@@ -45,7 +48,6 @@ export default async function Page() {
               display: "block",
               margin: "0 auto 18px",
               borderRadius: 20,
-              boxShadow: "0 20px 46px rgba(0,0,0,0.45)",
             }}
           />
           <h1
@@ -54,24 +56,22 @@ export default async function Page() {
               fontSize: "clamp(2.5rem, 7vw, 4.5rem)",
               fontWeight: 900,
               letterSpacing: "-0.03em",
-              color: "#f8fafc",
+              color: "#2c3e50",
             }}
           >
-            StudiBudd
           </h1>
           <p
             style={{
               margin: "0 0 24px",
-              color: "rgba(226,232,240,0.95)",
-              fontSize: "clamp(1.05rem, 2.1vw, 1.25rem)",
+              color: "rgba(0, 0, 0, 0.78)",
+              fontSize: "clamp(1.55rem, 2.6vw, 1.75rem)",
               fontWeight: 600,
             }}
           >
-            Build momentum every single study session.
+            Study and Grow Together
           </p>
 
-          <p style={{ margin: "0 0 14px", color: "rgba(203,213,225,0.9)", fontSize: 14 }}>
-            Sign in to continue
+          <p style={{ margin: "0 0 14px", color: "rgba(255, 0, 0, 0.5)", fontSize: 14 }}>
           </p>
           <LoginButton />
         </div>
