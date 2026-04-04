@@ -26,7 +26,7 @@ export async function GET() {
     const courses = Array.isArray(raw)
       ? raw
           .filter((c) => c.name && c.workflow_state !== "deleted")
-          .map((c) => ({ id: c.id, name: c.name, courseCode: c.course_code }))
+          .map((c) => ({ id: c.id, name: c.name, code: c.course_code }))
       : [];
     return NextResponse.json({ courses, connected: true });
   } catch {

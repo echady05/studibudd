@@ -304,7 +304,7 @@ interface CanvasAssignment {
   htmlUrl: string;
 }
 
-function CanvasConnect() {
+function CanvasConnect({ onConnected }: { onConnected: () => void }) {
   const router = useRouter();
 
   const [status, setStatus] = useState<"loading" | "connected" | "disconnected">("loading");
@@ -376,8 +376,7 @@ function CanvasConnect() {
       const d = await res.json().catch(() => ({}));
   
       if (!res.ok) { 
-        // If you still see the 500 error here, the backend route logic itself 
-        // needs to be changed to stop calling 'mkdir'.
+  
         setError(d.error || "Server storage error. Backend cannot write files."); 
         return;
       }
@@ -671,7 +670,7 @@ function CanvasConnect() {
 }
 // ─── Assignments ──────────────────────────────────────────────────────────────
 
-function Assignments() {
+function Assignments({ refreshKey }: { refreshKey: number }) {
   const [canvasItems, setCanvasItems] = useState<CanvasAssignment[] | null>(null);
   const [localDone, setLocalDone] = useState<Set<number>>(new Set());
   const [connected, setConnected] = useState(false);
@@ -684,7 +683,7 @@ function Assignments() {
         if (d.connected && Array.isArray(d.assignments)) setCanvasItems(d.assignments);
       })
       .catch(() => {});
-  }, []);
+  }, [refreshKey]);
 
   const toggleDone = (id: number) =>
     setLocalDone(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
@@ -864,7 +863,7 @@ function ImageSlot({ slotKey, data, onChange }: {
 }
 
 // ─── Focus Board ──────────────────────────────────────────────────────────────
-function FocusBoard() {
+function FocusBoard({ refreshKey }: { refreshKey: number }) {
   const [page, setPage] = useState(0);
   const [canvasAssignments, setCanvasAssignments] = useState<CanvasAssignment[]>([]);
   const [courses, setCourses] = useState<{ id: number; name: string; code: string }[]>([]);
@@ -898,7 +897,7 @@ function FocusBoard() {
         if (d.connected && Array.isArray(d.assignments)) setCanvasAssignments(d.assignments);
       })
       .catch(() => {});
-  }, []);
+  }, [refreshKey]);
 
   const slots = order.map((originalIdx) => ({
     src: EGG_IMAGES[originalIdx % EGG_IMAGES.length].src,
@@ -1141,6 +1140,7 @@ function FocusBoard() {
 
 export default function BentoDashboard({ session }: BentoDashboardProps) {
   const [showGame, setShowGame] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [showDropdown, setShowDropdown] = useState(false);
   const year = new Date().getFullYear();
   const initials = getInitials(session.user?.name);
@@ -1193,10 +1193,12 @@ export default function BentoDashboard({ session }: BentoDashboardProps) {
         fontFamily: "'DM Sans', system-ui, sans-serif",
         padding: 20,
         boxSizing: "border-box",
+        overflow: "hidden",
+        maxWidth: "100vw",
       }}>
         <div style={{
           display: "grid",
-          gridTemplateColumns: "280px 1fr",
+          gridTemplateColumns: "280px minmax(0, 1fr)",
           gap: 12,
           alignItems: "start",
         }}>
@@ -1215,7 +1217,7 @@ export default function BentoDashboard({ session }: BentoDashboardProps) {
             </div>
 
             {/* Canvas Connect */}
-            <CanvasConnect />
+            <CanvasConnect onConnected={() => setRefreshKey(k => k+1)}   />
 
             {/* Calendar */}
             <div className="bento-card">
@@ -1224,7 +1226,7 @@ export default function BentoDashboard({ session }: BentoDashboardProps) {
 
             {/* Assignments */}
             <div className="bento-card">
-              <Assignments />
+            <Assignments refreshKey={refreshKey} />
             </div>
 
           </div>
@@ -1311,7 +1313,7 @@ export default function BentoDashboard({ session }: BentoDashboardProps) {
 </div>
 
 {/* ── Focus Board ── */}
-<FocusBoard />
+<FocusBoard refreshKey={refreshKey}/>
 
 {/* Game */}
 {showGame && (

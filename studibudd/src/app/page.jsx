@@ -65,7 +65,7 @@ export default async function Page() {
               color: "rgba(226,232,240,0.95)",
               fontSize: "clamp(1.05rem, 2.1vw, 1.25rem)",
               fontWeight: 600,
-            }}git status
+            }}
           >
             Build momentum every single study session.
           </p>
