@@ -364,36 +364,28 @@ function CanvasConnect({ onConnected }: { onConnected: () => void }) {
   async function connect() {
     setError("");
     setSaving(true);
-    const cleanUrl = cleanCanvasUrl(url); // [cite: 7, 14]
-  
+    const cleanUrl = cleanCanvasUrl(url);
     try {
       const res = await fetch("/api/canvas/connect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ canvasUrl: cleanUrl, canvasToken: token.trim() }), // 
+        body: JSON.stringify({ canvasUrl: cleanUrl, canvasToken: token.trim() }),
       });
-  
       const d = await res.json().catch(() => ({}));
-  
-      if (!res.ok) { 
-  
-        setError(d.error || "Server storage error. Backend cannot write files."); 
+      if (!res.ok) {
+        setError(d.error || "Server storage error. Backend cannot write files.");
         return;
       }
-  
-      // Update local state so the UI works even if the server is read-only [cite: 17]
       setStatus("connected");
       setCourseCount(d.courses?.length ?? preview?.courseCount ?? 0);
       setConnectedName(preview?.name ?? "");
-      
-      setShowModal(false); // [cite: 17]
-      setPreview(null); // [cite: 17]
-      router.refresh(); // [cite: 17]
-  
-    } catch (err) { 
-      setError("Network error — check your connection."); // 
-    } finally { 
-      setSaving(false); // 
+      setShowModal(false);
+      setPreview(null);
+      router.refresh();
+    } catch (err) {
+      setError("Network error — check your connection.");
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -411,7 +403,6 @@ function CanvasConnect({ onConnected }: { onConnected: () => void }) {
 
   return (
     <>
-      {/* ── Backdrop + Modal ── */}
       {showModal && (
         <div
           onClick={() => setShowModal(false)}
@@ -438,7 +429,6 @@ function CanvasConnect({ onConnected }: { onConnected: () => void }) {
               position: "relative",
             }}
           >
-            {/* Close button */}
             <button
               onClick={() => setShowModal(false)}
               style={{
@@ -459,134 +449,64 @@ function CanvasConnect({ onConnected }: { onConnected: () => void }) {
               Follow the steps below — takes about 60 seconds.
             </div>
 
-            {/* ── Step 1 ── */}
             <div style={{ marginBottom: 20 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                <span style={{
-                  width: 22, height: 22, borderRadius: "50%",
-                  background: "#111827", color: "#fff",
-                  fontSize: 11, fontWeight: 600,
-                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-                }}>1</span>
+                <span style={{ width: 22, height: 22, borderRadius: "50%", background: "#111827", color: "#fff", fontSize: 11, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>1</span>
                 <span style={{ fontSize: 13, fontWeight: 500, color: "var(--bento-text-primary)" }}>Enter your school's Canvas URL</span>
               </div>
-              <img
-                src="/pictures/canvashelp/url.png"
-                alt="Canvas URL example"
-                style={{ width: "100%", borderRadius: 12, objectFit: "cover", marginBottom: 10 }}
-              />
+              <img src="/pictures/canvashelp/url.png" alt="Canvas URL example" style={{ width: "100%", borderRadius: 12, objectFit: "cover", marginBottom: 10 }} />
               <input
                 type="text"
                 placeholder="https://yourschool.instructure.com"
                 value={url}
                 onChange={e => { setUrl(e.target.value); setPreview(null); }}
-                style={{
-                  width: "100%", fontSize: 12, padding: "8px 12px",
-                  borderRadius: 10, border: "0.5px solid var(--bento-border-hover)",
-                  background: "var(--bento-surface)", color: "var(--bento-text-primary)",
-                  outline: "none", boxSizing: "border-box",
-                }}
+                style={{ width: "100%", fontSize: 12, padding: "8px 12px", borderRadius: 10, border: "0.5px solid var(--bento-border-hover)", background: "var(--bento-surface)", color: "var(--bento-text-primary)", outline: "none", boxSizing: "border-box" }}
               />
-              <div style={{ fontSize: 10, color: "var(--bento-text-tertiary)", marginTop: 4 }}>
-                Paste anything — we'll clean up the URL automatically.
-              </div>
+              <div style={{ fontSize: 10, color: "var(--bento-text-tertiary)", marginTop: 4 }}>Paste anything — we'll clean up the URL automatically.</div>
             </div>
 
-            {/* ── Step 2 ── */}
             <div style={{ marginBottom: 20 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                <span style={{
-                  width: 22, height: 22, borderRadius: "50%",
-                  background: "#111827", color: "#fff",
-                  fontSize: 11, fontWeight: 600,
-                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-                }}>2</span>
+                <span style={{ width: 22, height: 22, borderRadius: "50%", background: "#111827", color: "#fff", fontSize: 11, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>2</span>
                 <span style={{ fontSize: 13, fontWeight: 500, color: "var(--bento-text-primary)" }}>Go to your Canvas token page</span>
               </div>
-              <img
-                src="/pictures/canvashelp/gentokenbutton.png"
-                alt="How to generate a Canvas token"
-                style={{ width: "100%", borderRadius: 12, objectFit: "cover", marginBottom: 10 }}
-              />
-              <a
-                href={tokenPageUrl} target="_blank" rel="noopener noreferrer"
-                style={{
-                  fontSize: 12, padding: "8px 12px", borderRadius: 10,
-                  border: "0.5px solid var(--bento-border-hover)",
-                  background: "var(--bento-surface)", color: "var(--bento-text-primary)",
-                  textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "space-between",
-                }}
-              >
+              <img src="/pictures/canvashelp/gentokenbutton.png" alt="How to generate a Canvas token" style={{ width: "100%", borderRadius: 12, objectFit: "cover", marginBottom: 10 }} />
+              <a href={tokenPageUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, padding: "8px 12px", borderRadius: 10, border: "0.5px solid var(--bento-border-hover)", background: "var(--bento-surface)", color: "var(--bento-text-primary)", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <span>Open Canvas Token Page</span>
                 <span style={{ fontSize: 11, opacity: 0.5 }}>opens in new tab ↗</span>
               </a>
-              <div style={{ fontSize: 10, color: "var(--bento-text-tertiary)", marginTop: 4 }}>
-                Account → Settings → scroll to <em>Approved Integrations</em> → click <strong>+ New Access Token</strong>.
-              </div>
+              <div style={{ fontSize: 10, color: "var(--bento-text-tertiary)", marginTop: 4 }}>Account → Settings → scroll to <em>Approved Integrations</em> → click <strong>+ New Access Token</strong>.</div>
             </div>
 
-            {/* ── Step 3 ── */}
             <div style={{ marginBottom: 20 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                <span style={{
-                  width: 22, height: 22, borderRadius: "50%",
-                  background: "#111827", color: "#fff",
-                  fontSize: 11, fontWeight: 600,
-                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-                }}>3</span>
+                <span style={{ width: 22, height: 22, borderRadius: "50%", background: "#111827", color: "#fff", fontSize: 11, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>3</span>
                 <span style={{ fontSize: 13, fontWeight: 500, color: "var(--bento-text-primary)" }}>Fill out the form</span>
               </div>
-              <img
-                src="/pictures/canvashelp/fillout.png"
-                alt="Copy your Canvas token"
-                style={{ width: "100%", borderRadius: 12, objectFit: "cover", marginBottom: 10 }}
-              />
-              <div style={{ fontSize: 10, color: "var(--bento-text-tertiary)" }}>
-                Set your experation date and click generate
-              </div>
+              <img src="/pictures/canvashelp/fillout.png" alt="Copy your Canvas token" style={{ width: "100%", borderRadius: 12, objectFit: "cover", marginBottom: 10 }} />
+              <div style={{ fontSize: 10, color: "var(--bento-text-tertiary)" }}>Set your experation date and click generate</div>
             </div>
 
-            {/* ── Step 4 ── */}
             <div style={{ marginBottom: 20 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                <span style={{
-                  width: 22, height: 22, borderRadius: "50%",
-                  background: "#111827", color: "#fff",
-                  fontSize: 11, fontWeight: 600,
-                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-                }}>4</span>
+                <span style={{ width: 22, height: 22, borderRadius: "50%", background: "#111827", color: "#fff", fontSize: 11, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>4</span>
                 <span style={{ fontSize: 13, fontWeight: 500, color: "var(--bento-text-primary)" }}>Copy and paste your token here</span>
               </div>
-              <img
-                src="/pictures/canvashelp/copytoken.png"
-                alt="Paste token into StudiBudd"
-                style={{ width: "100%", borderRadius: 12, objectFit: "cover", marginBottom: 10 }}
-              />
+              <img src="/pictures/canvashelp/copytoken.png" alt="Paste token into StudiBudd" style={{ width: "100%", borderRadius: 12, objectFit: "cover", marginBottom: 10 }} />
               <input
                 type="password"
                 placeholder="Paste token here"
                 value={token}
                 onChange={e => { setToken(e.target.value); setPreview(null); }}
-                style={{
-                  width: "100%", fontSize: 12, padding: "8px 12px",
-                  borderRadius: 10, border: "0.5px solid var(--bento-border-hover)",
-                  background: "var(--bento-surface)", color: "var(--bento-text-primary)",
-                  outline: "none", boxSizing: "border-box",
-                }}
+                style={{ width: "100%", fontSize: 12, padding: "8px 12px", borderRadius: 10, border: "0.5px solid var(--bento-border-hover)", background: "var(--bento-surface)", color: "var(--bento-text-primary)", outline: "none", boxSizing: "border-box" }}
               />
-              <div style={{ fontSize: 10, color: "var(--bento-text-tertiary)", marginTop: 4 }}>
-                Paste the token you just copied from Canvas.
-              </div>
+              <div style={{ fontSize: 10, color: "var(--bento-text-tertiary)", marginTop: 4 }}>Paste the token you just copied from Canvas.</div>
             </div>
 
-            {/* Error */}
             {error && (
-              <div style={{ fontSize: 11, color: "#dc2626", background: "rgba(220,38,38,0.07)", borderRadius: 8, padding: "8px 12px", marginBottom: 12 }}>
-                {error}
-              </div>
+              <div style={{ fontSize: 11, color: "#dc2626", background: "rgba(220,38,38,0.07)", borderRadius: 8, padding: "8px 12px", marginBottom: 12 }}>{error}</div>
             )}
 
-            {/* Preview success */}
             {preview && (
               <div style={{ fontSize: 11, color: "#1D9E75", background: "rgba(29,158,117,0.08)", borderRadius: 8, padding: "8px 12px", marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>
                 <span>✓</span>
@@ -594,52 +514,24 @@ function CanvasConnect({ onConnected }: { onConnected: () => void }) {
               </div>
             )}
 
-            {/* Buttons */}
             <div style={{ display: "flex", gap: 8 }}>
               {!preview ? (
-                <button
-                  onClick={verify}
-                  disabled={verifying || !token.trim()}
-                  style={{
-                    fontSize: 12, padding: "8px 14px",
-                    background: "var(--bento-surface)", color: "var(--bento-text-primary)",
-                    border: "0.5px solid var(--bento-border-hover)",
-                    borderRadius: 10, cursor: verifying || !token.trim() ? "not-allowed" : "pointer",
-                    flex: 1, opacity: !token.trim() ? 0.5 : 1,
-                  }}
-                >
+                <button onClick={verify} disabled={verifying || !token.trim()} style={{ fontSize: 12, padding: "8px 14px", background: "var(--bento-surface)", color: "var(--bento-text-primary)", border: "0.5px solid var(--bento-border-hover)", borderRadius: 10, cursor: verifying || !token.trim() ? "not-allowed" : "pointer", flex: 1, opacity: !token.trim() ? 0.5 : 1 }}>
                   {verifying ? "Verifying..." : "Verify Token"}
                 </button>
               ) : (
-                <button
-                  onClick={connect}
-                  disabled={saving}
-                  style={{
-                    fontSize: 12, padding: "8px 14px",
-                    background: "#111827", color: "#fff",
-                    border: "none", borderRadius: 10, cursor: "pointer", flex: 1,
-                  }}
-                >
+                <button onClick={connect} disabled={saving} style={{ fontSize: 12, padding: "8px 14px", background: "#111827", color: "#fff", border: "none", borderRadius: 10, cursor: "pointer", flex: 1 }}>
                   {saving ? "Connecting..." : "Save & Connect"}
                 </button>
               )}
-              <button
-                onClick={() => { setShowModal(false); setPreview(null); setError(""); }}
-                style={{
-                  fontSize: 12, padding: "8px 14px",
-                  background: "none", border: "0.5px solid var(--bento-border)",
-                  borderRadius: 10, cursor: "pointer", color: "var(--bento-text-secondary)",
-                }}
-              >
+              <button onClick={() => { setShowModal(false); setPreview(null); setError(""); }} style={{ fontSize: 12, padding: "8px 14px", background: "none", border: "0.5px solid var(--bento-border)", borderRadius: 10, cursor: "pointer", color: "var(--bento-text-secondary)" }}>
                 Cancel
               </button>
             </div>
-
           </div>
         </div>
       )}
 
-      {/* ── Card trigger ── */}
       <div className="bento-card" style={{ padding: "14px 18px" }}>
         {status === "connected" ? (
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -657,10 +549,7 @@ function CanvasConnect({ onConnected }: { onConnected: () => void }) {
             </button>
           </div>
         ) : (
-          <button
-            onClick={() => setShowModal(true)}
-            style={{ width: "100%", textAlign: "left", background: "none", border: "0.5px dashed var(--bento-border-hover)", borderRadius: 10, padding: "10px 14px", cursor: "pointer", color: "var(--bento-text-secondary)", fontSize: 12 }}
-          >
+          <button onClick={() => setShowModal(true)} style={{ width: "100%", textAlign: "left", background: "none", border: "0.5px dashed var(--bento-border-hover)", borderRadius: 10, padding: "10px 14px", cursor: "pointer", color: "var(--bento-text-secondary)", fontSize: 12 }}>
             + Connect Canvas to see real assignments &amp; courses
           </button>
         )}
@@ -668,6 +557,7 @@ function CanvasConnect({ onConnected }: { onConnected: () => void }) {
     </>
   );
 }
+
 // ─── Assignments ──────────────────────────────────────────────────────────────
 
 function Assignments({ refreshKey }: { refreshKey: number }) {
@@ -746,123 +636,47 @@ function Assignments({ refreshKey }: { refreshKey: number }) {
   );
 }
 
-// ─── Single Image / Creature Slot ─────────────────────────────────────────────
+// ─── Focus Board ──────────────────────────────────────────────────────────────
 
-function ImageSlot({ slotKey, data, onChange }: {
-  slotKey: string;
-  data: SlotData;
-  onChange: (key: string, data: SlotData) => void;
-}) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const slotNumber = slotKey.split("-").map(Number);
-  const displayNum = slotNumber[0] * 2 + slotNumber[1];
+const XP_PER_LEVEL = 100;
+const CREATURE_FOLDERS = ["beige", "blue", "green", "grey", "pink", "red"];
+const STAGE_FILES = ["egg", "1", "2"];
+const MAX_STAGE = 2;
 
-  const handleFile = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = () =>
-      onChange(slotKey, { src: reader.result as string, label: file.name.replace(/\.[^.]+$/, "") });
-    reader.readAsDataURL(file);
-  };
+interface CreatureState {
+  stage: number;
+  xp: number;
+}
 
-  const onInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) handleFile(file);
-  };
-
-  const onDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    const file = e.dataTransfer.files?.[0];
-    if (file) handleFile(file);
-  };
-
-  const clear = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onChange(slotKey, { src: null, label: `Slot ${displayNum}` });
-  };
-
+function XpBar({ xp, max }: { xp: number; max: number }) {
+  const pct = Math.min((xp / max) * 100, 100);
   return (
-    <div
-      style={{ display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" }}
-      onDrop={onDrop}
-      onDragOver={e => e.preventDefault()}
-    >
-      {/* Image / creature area */}
-      <div style={{
-        minHeight: 280, position: "relative",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        background: "var(--bento-surface)",
-      }}>
-        {data.src ? (
-          <img
-            src={data.src}
-            alt={data.label}
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain" }}
-          />
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
-            {/* Egg / creature placeholder */}
-            <div style={{
-              width: 54, height: 64,
-              borderRadius: "50% 50% 50% 50% / 60% 60% 40% 40%",
-              background: "var(--bento-bg)",
-              border: "0.5px solid var(--bento-border-hover)",
-              display: "flex", flexDirection: "column",
-              alignItems: "center", justifyContent: "center", gap: 6,
-            }}>
-              <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                <span style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--bento-text-tertiary)", display: "block" }} />
-                <span style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--bento-text-tertiary)", display: "block" }} />
-              </div>
-            </div>
-            <span style={{ fontSize: 11, color: "var(--bento-text-tertiary)" }}>Creature slot {displayNum}</span>
-            <button
-              onClick={() => inputRef.current?.click()}
-              style={{
-                fontSize: 11, color: "var(--bento-text-secondary)",
-                background: "var(--bento-bg)",
-                border: "0.5px solid var(--bento-border-hover)",
-                borderRadius: 6, padding: "4px 12px", cursor: "pointer",
-              }}
-            >Upload image</button>
-          </div>
-        )}
-        {data.src && (
-          <div
-            onClick={() => inputRef.current?.click()}
-            style={{ position: "absolute", inset: 0, cursor: "pointer", zIndex: 1 }}
-          />
-        )}
+    <div style={{ width: "100%", padding: "8px 14px 6px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+        <span style={{ fontSize: 9, fontWeight: 600, color: "var(--bento-text-tertiary)", letterSpacing: "0.06em", textTransform: "uppercase" }}>XP</span>
+        <span style={{ fontSize: 9, color: "var(--bento-text-tertiary)" }}>{xp} / {max}</span>
       </div>
-
-      {/* Caption */}
-      <div style={{
-        padding: "10px 14px",
-        borderTop: "0.5px solid var(--bento-border)",
-        background: "var(--bento-bg)",
-        position: "relative", zIndex: 2,
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-      }}>
-        <div>
-          <div style={{ fontSize: 12, fontWeight: 500, color: "var(--bento-text-primary)" }}>{data.label}</div>
-          <div style={{ fontSize: 10, color: "var(--bento-text-tertiary)", marginTop: 1 }}>
-            {data.src ? "Click to replace" : "Drop or upload"}
-          </div>
+      <div style={{ height: 5, borderRadius: 99, background: "var(--bento-border)", overflow: "hidden", position: "relative" }}>
+        <div style={{
+          height: "100%",
+          width: `${pct}%`,
+          borderRadius: 99,
+          background: "linear-gradient(90deg, #1D9E75, #378ADD)",
+          transition: "width 0.45s cubic-bezier(0.34, 1.56, 0.64, 1)",
+          position: "relative",
+          overflow: "hidden",
+        }}>
+          <div style={{
+            position: "absolute", inset: 0,
+            background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%)",
+            animation: "xp-shimmer 1.8s infinite",
+          }} />
         </div>
-        {data.src && (
-          <button onClick={clear} style={{
-            fontSize: 10, color: "var(--bento-text-tertiary)",
-            background: "none", border: "0.5px solid var(--bento-border)",
-            borderRadius: 6, padding: "3px 8px", cursor: "pointer",
-          }}>Clear</button>
-        )}
       </div>
-
-      <input ref={inputRef} type="file" accept="image/*" onChange={onInput} style={{ display: "none" }} />
     </div>
   );
 }
 
-// ─── Focus Board ──────────────────────────────────────────────────────────────
 function FocusBoard({ refreshKey }: { refreshKey: number }) {
   const [page, setPage] = useState(0);
   const [canvasAssignments, setCanvasAssignments] = useState<CanvasAssignment[]>([]);
@@ -871,14 +685,10 @@ function FocusBoard({ refreshKey }: { refreshKey: number }) {
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
 
-  const EGG_IMAGES = [
-    { src: "pictures/buddies/beige/beige-egg.png", label: "Beige Egg" },
-    { src: "pictures/buddies/blue/blue-egg.png",   label: "Blue Egg"  },
-    { src: "pictures/buddies/green/green-egg.png", label: "Green Egg" },
-    { src: "pictures/buddies/grey/grey-egg.png",   label: "Grey Egg"  },
-    { src: "pictures/buddies/pink/pink-egg.png",   label: "Pink Egg"  },
-    { src: "pictures/buddies/red/red-egg.png",     label: "Red Egg"   },
-  ];
+  // Per-slot creature state: keyed by original slot index
+  const [creatures, setCreatures] = useState<Record<number, CreatureState>>({});
+  // Flash effect type per slot
+  const [flash, setFlash] = useState<Record<number, "evolve" | "devolve" | "xp" | null>>({});
 
   useEffect(() => {
     fetch("/api/canvas/courses")
@@ -886,7 +696,11 @@ function FocusBoard({ refreshKey }: { refreshKey: number }) {
       .then(d => {
         if (d.connected && Array.isArray(d.courses)) {
           setCourses(d.courses);
-          setOrder(d.courses.map((_: any, i: number) => i));
+          const indices = d.courses.map((_: any, i: number) => i);
+          setOrder(indices);
+          setCreatures(
+            Object.fromEntries(indices.map((i: number) => [i, { stage: 0, xp: 0 }]))
+          );
         }
       })
       .catch(() => {});
@@ -899,11 +713,63 @@ function FocusBoard({ refreshKey }: { refreshKey: number }) {
       .catch(() => {});
   }, [refreshKey]);
 
+  // ── Creature helpers ──────────────────────────────────────────────────────
+
+  function triggerFlash(slotIdx: number, type: "evolve" | "devolve" | "xp") {
+    setFlash(f => ({ ...f, [slotIdx]: type }));
+    setTimeout(() => setFlash(f => ({ ...f, [slotIdx]: null })), 650);
+  }
+
+  function evolveCreature(e: React.MouseEvent, slotIdx: number) {
+    e.stopPropagation();
+    setCreatures(prev => {
+      const cur = prev[slotIdx] ?? { stage: 0, xp: 0 };
+      if (cur.stage >= MAX_STAGE) return prev;
+      triggerFlash(slotIdx, "evolve");
+      return { ...prev, [slotIdx]: { stage: cur.stage + 1, xp: 0 } };
+    });
+  }
+
+  function devolveCreature(e: React.MouseEvent, slotIdx: number) {
+    e.stopPropagation();
+    setCreatures(prev => {
+      const cur = prev[slotIdx] ?? { stage: 0, xp: 0 };
+      if (cur.stage <= 0) return prev;
+      triggerFlash(slotIdx, "devolve");
+      return { ...prev, [slotIdx]: { stage: cur.stage - 1, xp: 0 } };
+    });
+  }
+
+  function addXp(e: React.MouseEvent, slotIdx: number, amount = 25) {
+    e.stopPropagation();
+    setCreatures(prev => {
+      const cur = prev[slotIdx] ?? { stage: 0, xp: 0 };
+      const newXp = cur.xp + amount;
+      if (newXp >= XP_PER_LEVEL && cur.stage < MAX_STAGE) {
+        // Auto-evolve when bar fills
+        triggerFlash(slotIdx, "evolve");
+        return { ...prev, [slotIdx]: { stage: cur.stage + 1, xp: 0 } };
+      }
+      triggerFlash(slotIdx, "xp");
+      return { ...prev, [slotIdx]: { ...cur, xp: Math.min(newXp, XP_PER_LEVEL) } };
+    });
+  }
+
+  function getImageSrc(originalIdx: number): string {
+    const folder = CREATURE_FOLDERS[originalIdx % CREATURE_FOLDERS.length];
+    const stage = creatures[originalIdx]?.stage ?? 0;
+    const file = STAGE_FILES[stage];
+    return `pictures/buddies/${folder}/${file}.png`;
+  }
+
+  // ── Build slot data ───────────────────────────────────────────────────────
+
   const slots = order.map((originalIdx) => ({
-    src: EGG_IMAGES[originalIdx % EGG_IMAGES.length].src,
-    label: EGG_IMAGES[originalIdx % EGG_IMAGES.length].label,
+    src: getImageSrc(originalIdx),
+    folder: CREATURE_FOLDERS[originalIdx % CREATURE_FOLDERS.length],
     course: courses[originalIdx]?.name ?? "",
     courseCode: courses[originalIdx]?.code ?? "",
+    originalIdx,
   }));
 
   const pages: typeof slots[] = [];
@@ -916,7 +782,8 @@ function FocusBoard({ refreshKey }: { refreshKey: number }) {
       courseName.toLowerCase().includes(a.courseName?.toLowerCase() ?? "____")
     ).slice(0, 3);
 
-  // Drag handlers
+  // ── Drag (thumbnails) ─────────────────────────────────────────────────────
+
   const onThumbDragStart = (i: number) => setDragIdx(i);
   const onThumbDragOver  = (e: React.DragEvent, i: number) => { e.preventDefault(); setDragOverIdx(i); };
   const onThumbDrop      = (i: number) => {
@@ -929,7 +796,8 @@ function FocusBoard({ refreshKey }: { refreshKey: number }) {
     setDragOverIdx(null);
   };
 
-  // Swipe / drag for main slide track
+  // ── Swipe / drag (slides) ─────────────────────────────────────────────────
+
   const touchStartX = useRef<number | null>(null);
   const dragStartX  = useRef<number | null>(null);
   const [dragOffset, setDragOffset] = useState(0);
@@ -977,6 +845,8 @@ function FocusBoard({ refreshKey }: { refreshKey: number }) {
     window.removeEventListener("mouseup", handleMouseUp);
   }, [handleMouseMove, handleMouseUp]);
 
+  // ── Empty state ───────────────────────────────────────────────────────────
+
   if (courses.length === 0) {
     return (
       <div className="bento-card" style={{ padding: "32px 24px", textAlign: "center" }}>
@@ -986,156 +856,237 @@ function FocusBoard({ refreshKey }: { refreshKey: number }) {
     );
   }
 
+  // ── Render ────────────────────────────────────────────────────────────────
+
   return (
-    <div className="bento-card" style={{ overflow: "hidden" }}>
-      {/* ── HEADER WITH INTEGRATED THUMBNAILS ── */}
-      <div style={{
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "8px 18px",
-        borderBottom: "0.5px solid var(--bento-border)",
-        background: "var(--bento-bg)",
-      }}>
-        {/* Left Side: Title & Page Count */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: "fit-content" }}>
-          <span style={{ fontSize: 13, fontWeight: 600, color: "var(--bento-text-primary)" }}>Courses</span>
-          <span style={{ fontSize: 10, color: "var(--bento-text-tertiary)" }}>{page + 1} / {totalPages}</span>
-        </div>
+    <>
+      <style>{`
+        @keyframes xp-shimmer {
+          0%   { transform: translateX(-100%); }
+          100% { transform: translateX(300%); }
+        }
+        @keyframes flash-evolve {
+          0%   { opacity: 0; transform: scale(0.8); }
+          40%  { opacity: 1; transform: scale(1.05); }
+          100% { opacity: 0; transform: scale(1.3); }
+        }
+        @keyframes flash-xp {
+          0%   { opacity: 0.8; transform: scale(1); }
+          100% { opacity: 0; transform: scale(1.6); }
+        }
+        @keyframes flash-devolve {
+          0%   { opacity: 0; }
+          30%  { opacity: 1; }
+          100% { opacity: 0; }
+        }
+      `}</style>
 
-        {/* Center: THE DRAGGABLE THUMBNAILS */}
+      <div className="bento-card" style={{ overflow: "hidden" }}>
+
+        {/* ── Header ── */}
         <div style={{
-          display: "flex", alignItems: "center", gap: 5,
-          overflowX: "auto", flex: 1, margin: "0 15px",
-          scrollbarWidth: "none",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "8px 18px",
+          borderBottom: "0.5px solid var(--bento-border)",
+          background: "var(--bento-bg)",
         }}>
-          {slots.map((slot, i) => {
-            const isOnCurrentPage = Math.floor(i / 2) === page;
-            const isDragging = dragIdx === i;
-            const isTarget = dragOverIdx === i && dragIdx !== i;
-            return (
-              <div
-                key={i}
-                draggable
-                onDragStart={() => onThumbDragStart(i)}
-                onDragOver={e => onThumbDragOver(e, i)}
-                onDrop={() => onThumbDrop(i)}
-                onDragEnd={() => { setDragIdx(null); setDragOverIdx(null); }}
-                onClick={() => goTo(Math.floor(i / 2))}
-                style={{
-                  flexShrink: 0, width: 32, height: 32, borderRadius: 6,
-                  background: "var(--bento-surface)",
-                  border: isTarget ? "2px solid #111827" : isOnCurrentPage ? "1.5px solid var(--bento-text-primary)" : "0.5px solid var(--bento-border)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  cursor: "grab", opacity: isDragging ? 0.3 : 1,
-                  transform: isTarget ? "scale(1.1)" : "scale(1)",
-                  transition: "all 0.15s ease",
-                }}
-              >
-                <img src={slot.src} alt="" style={{ width: 24, height: 24, objectFit: "contain" }} draggable={false} />
-              </div>
-            );
-          })}
+          <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: "fit-content" }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: "var(--bento-text-primary)" }}>Courses</span>
+            <span style={{ fontSize: 10, color: "var(--bento-text-tertiary)" }}>{page + 1} / {totalPages}</span>
+          </div>
+
+          {/* Thumbnails */}
+          <div style={{ display: "flex", alignItems: "center", gap: 5, overflowX: "auto", flex: 1, margin: "0 15px", scrollbarWidth: "none" }}>
+            {slots.map((slot, i) => {
+              const isOnCurrentPage = Math.floor(i / 2) === page;
+              const isDragging = dragIdx === i;
+              const isTarget = dragOverIdx === i && dragIdx !== i;
+              return (
+                <div
+                  key={i}
+                  draggable
+                  onDragStart={() => onThumbDragStart(i)}
+                  onDragOver={e => onThumbDragOver(e, i)}
+                  onDrop={() => onThumbDrop(i)}
+                  onDragEnd={() => { setDragIdx(null); setDragOverIdx(null); }}
+                  onClick={() => goTo(Math.floor(i / 2))}
+                  style={{
+                    flexShrink: 0, width: 32, height: 32, borderRadius: 6,
+                    background: "var(--bento-surface)",
+                    border: isTarget ? "2px solid #111827" : isOnCurrentPage ? "1.5px solid var(--bento-text-primary)" : "0.5px solid var(--bento-border)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    cursor: "grab", opacity: isDragging ? 0.3 : 1,
+                    transform: isTarget ? "scale(1.1)" : "scale(1)",
+                    transition: "all 0.15s ease",
+                  }}
+                >
+                  <img src={slot.src} alt="" style={{ width: 24, height: 24, objectFit: "contain" }} draggable={false} />
+                </div>
+              );
+            })}
+          </div>
+
+          <div style={{ display: "flex", gap: 6 }}>
+            {["‹", "›"].map((arrow, i) => {
+              const disabled = i === 0 ? page === 0 : page === totalPages - 1;
+              return (
+                <button key={arrow} onClick={() => goTo(page + (i === 0 ? -1 : 1))} disabled={disabled} style={{ background: "none", border: "0.5px solid var(--bento-border)", borderRadius: 6, width: 24, height: 24, cursor: disabled ? "not-allowed" : "pointer", color: disabled ? "var(--bento-text-tertiary)" : "var(--bento-text-secondary)", display: "flex", alignItems: "center", justifyContent: "center", opacity: disabled ? 0.4 : 1 }}>
+                  {arrow}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Right Side: Navigation Arrows */}
-        <div style={{ display: "flex", gap: 6 }}>
-          {["‹", "›"].map((arrow, i) => {
-            const disabled = i === 0 ? page === 0 : page === totalPages - 1;
-            return (
-              <button 
-                key={arrow} 
-                onClick={() => goTo(page + (i === 0 ? -1 : 1))} 
-                disabled={disabled} 
-                style={{
-                  background: "none", border: "0.5px solid var(--bento-border)",
-                  borderRadius: 6, width: 24, height: 24,
-                  cursor: disabled ? "not-allowed" : "pointer",
-                  color: disabled ? "var(--bento-text-tertiary)" : "var(--bento-text-secondary)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  opacity: disabled ? 0.4 : 1,
-                }}
-              >
-                {arrow}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+        {/* ── Slide track ── */}
+        <div
+          style={{ overflow: "hidden", cursor: "grab", userSelect: "none" }}
+          onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
+          onMouseDown={onMouseDown}
+        >
+          <div style={{
+            display: "flex",
+            width: `${totalPages * 100}%`,
+            transform: `translateX(calc(${(-page / totalPages) * 100}% + ${dragOffset / totalPages}px))`,
+            transition: dragOffset === 0 ? "transform 0.28s cubic-bezier(0.4,0,0.2,1)" : "none",
+            willChange: "transform",
+          }}>
+            {pages.map((pair, pageIdx) => (
+              <div key={pageIdx} style={{ width: `${100 / totalPages}%`, display: "grid", gridTemplateColumns: pair.length === 1 ? "1fr" : "1fr 1fr" }}>
+                {pair.map((slot, si) => {
+                  const oi = slot.originalIdx;
+                  const creature = creatures[oi] ?? { stage: 0, xp: 0 };
+                  const flashType = flash[oi];
+                  const isMaxStage = creature.stage >= MAX_STAGE;
+                  const isMinStage = creature.stage <= 0;
+                  const stageLabel = creature.stage === 0 ? "Egg" : `Form ${creature.stage}`;
+                  const courseAssignments = assignmentsForCourse(slot.course);
 
-      {/* ── Slide track ── */}
-      <div
-        style={{ overflow: "hidden", cursor: "grab", userSelect: "none" }}
-        onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
-        onMouseDown={onMouseDown}
-      >
-        <div style={{
-          display: "flex",
-          width: `${totalPages * 100}%`,
-          transform: `translateX(calc(${(-page / totalPages) * 100}% + ${dragOffset / totalPages}px))`,
-          transition: dragOffset === 0 ? "transform 0.28s cubic-bezier(0.4,0,0.2,1)" : "none",
-          willChange: "transform",
-        }}>
-          {pages.map((pair, pageIdx) => (
-            <div key={pageIdx} style={{ width: `${100 / totalPages}%`, display: "grid", gridTemplateColumns: pair.length === 1 ? "1fr" : "1fr 1fr" }}>
-              {pair.map((slot, si) => {
-                const courseAssignments = assignmentsForCourse(slot.course);
-                return (
-                  <div key={si} style={{
-                    borderLeft: si === 1 ? "0.5px solid var(--bento-border)" : "none",
-                    display: "flex", flexDirection: "column",
-                  }}>
-                    {/* Top: course name */}
-                    <div style={{
-                      padding: "10px 14px 8px",
-                      borderBottom: "0.5px solid var(--bento-border)",
-                      background: "var(--bento-bg)",
-                      textAlign: "center",
-                    }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: "var(--bento-text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                        {slot.course}
+                  return (
+                    <div key={si} style={{ borderLeft: si === 1 ? "0.5px solid var(--bento-border)" : "none", display: "flex", flexDirection: "column" }}>
+
+                      {/* Course name */}
+                      <div style={{ padding: "10px 14px 8px", borderBottom: "0.5px solid var(--bento-border)", background: "var(--bento-bg)", textAlign: "center" }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: "var(--bento-text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{slot.course}</div>
+                        <div style={{ fontSize: 10, color: "var(--bento-text-tertiary)", marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{slot.courseCode}</div>
                       </div>
-                      <div style={{ fontSize: 10, color: "var(--bento-text-tertiary)", marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                        {slot.courseCode}
-                      </div>
-                    </div>
 
-                    {/* Image */}
-                    <div style={{ height: 220, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bento-surface)" }}>
-                      <img
-                        src={slot.src} alt={slot.label} draggable={false}
-                        onDragStart={e => e.preventDefault()}
-                        style={{ width: "100%", height: 220, objectFit: "contain" }}
-                      />
-                    </div>
+                      {/* Creature image */}
+                      <div style={{ height: 180, position: "relative", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bento-surface)", overflow: "hidden" }}>
+                        <img
+                          src={slot.src}
+                          alt={stageLabel}
+                          draggable={false}
+                          onDragStart={e => e.preventDefault()}
+                          style={{
+                            width: "100%", height: 180, objectFit: "contain",
+                            transition: "transform 0.35s cubic-bezier(0.34,1.56,0.64,1)",
+                            transform: flashType === "evolve" ? "scale(1.1)" : "scale(1)",
+                          }}
+                        />
 
-                    {/* Bottom: Coming Soon + assignments */}
-                    <div style={{ padding: "10px 14px", borderTop: "0.5px solid var(--bento-border)", background: "var(--bento-bg)", flex: 1 }}>
-                      <div style={{ fontSize: 11, fontWeight: 500, color: "var(--bento-text-secondary)", marginBottom: 6 }}>Coming Soon</div>
-                      {courseAssignments.length > 0 ? (
-                        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                          {courseAssignments.map(a => (
-                            <div key={a.id} style={{ display: "flex", alignItems: "flex-start", gap: 5, padding: "5px 7px", background: "var(--bento-surface)", borderRadius: 7 }}>
-                              <span style={{ width: 5, height: 5, borderRadius: "50%", background: a.urgent ? "#993C1D" : "#378ADD", flexShrink: 0, marginTop: 3 }} />
-                              <div style={{ minWidth: 0 }}>
-                                <div style={{ fontSize: 10, fontWeight: 500, color: "var(--bento-text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{a.name}</div>
-                                <div style={{ fontSize: 9, color: a.urgent ? "#993C1D" : "var(--bento-text-tertiary)", marginTop: 1 }}>{a.dueLabel}</div>
-                              </div>
-                            </div>
-                          ))}
+                        {/* Flash overlays */}
+                        {flashType === "evolve" && (
+                          <div style={{ position: "absolute", inset: 0, background: "radial-gradient(circle at center, rgba(255,210,80,0.6) 0%, transparent 70%)", animation: "flash-evolve 0.65s ease-out forwards", pointerEvents: "none" }} />
+                        )}
+                        {flashType === "devolve" && (
+                          <div style={{ position: "absolute", inset: 0, background: "radial-gradient(circle at center, rgba(160,160,200,0.45) 0%, transparent 70%)", animation: "flash-devolve 0.65s ease-out forwards", pointerEvents: "none" }} />
+                        )}
+                        {flashType === "xp" && (
+                          <div style={{ position: "absolute", inset: 0, background: "radial-gradient(circle at center, rgba(29,158,117,0.35) 0%, transparent 65%)", animation: "flash-xp 0.5s ease-out forwards", pointerEvents: "none" }} />
+                        )}
+
+                        {/* Stage badge */}
+                        <div style={{ position: "absolute", top: 8, left: 8, background: "var(--bento-bg)", border: "0.5px solid var(--bento-border)", borderRadius: 20, padding: "2px 8px", fontSize: 9, fontWeight: 600, color: "var(--bento-text-secondary)", letterSpacing: "0.05em", pointerEvents: "none" }}>
+                          {stageLabel}
                         </div>
-                      ) : (
-                        <div style={{ fontSize: 10, color: "var(--bento-text-tertiary)" }}>No upcoming assignments</div>
-                      )}
+                      </div>
+
+                      {/* XP Bar */}
+                      <div style={{ background: "var(--bento-bg)" }}>
+                        <XpBar xp={creature.xp} max={XP_PER_LEVEL} />
+                      </div>
+
+                      {/* Control buttons */}
+                      <div style={{ display: "flex", gap: 5, padding: "0 14px 10px", background: "var(--bento-bg)" }}>
+                        <button
+                          onMouseDown={e => e.stopPropagation()}
+                          onClick={e => evolveCreature(e, oi)}
+                          disabled={isMaxStage}
+                          style={{
+                            flex: 1, fontSize: 10, fontWeight: 600, padding: "6px 0",
+                            background: isMaxStage ? "var(--bento-surface)" : "#111827",
+                            color: isMaxStage ? "var(--bento-text-tertiary)" : "#fff",
+                            border: "none", borderRadius: 7,
+                            cursor: isMaxStage ? "not-allowed" : "pointer",
+                            opacity: isMaxStage ? 0.45 : 1,
+                            transition: "opacity 0.15s",
+                          }}
+                        >▲ Evolve</button>
+                        <button
+                          onMouseDown={e => e.stopPropagation()}
+                          onClick={e => devolveCreature(e, oi)}
+                          disabled={isMinStage}
+                          style={{
+                            flex: 1, fontSize: 10, fontWeight: 600, padding: "6px 0",
+                            background: "var(--bento-surface)",
+                            color: isMinStage ? "var(--bento-text-tertiary)" : "var(--bento-text-secondary)",
+                            border: "0.5px solid var(--bento-border)",
+                            borderRadius: 7,
+                            cursor: isMinStage ? "not-allowed" : "pointer",
+                            opacity: isMinStage ? 0.45 : 1,
+                            transition: "opacity 0.15s",
+                          }}
+                        >▼ Devolve</button>
+                        <button
+                          onMouseDown={e => e.stopPropagation()}
+                          onClick={e => addXp(e, oi, 25)}
+                          style={{
+                            flex: 1, fontSize: 10, fontWeight: 600, padding: "6px 0",
+                            background: "rgba(29,158,117,0.1)",
+                            color: "#1D9E75",
+                            border: "0.5px solid rgba(29,158,117,0.3)",
+                            borderRadius: 7,
+                            cursor: "pointer",
+                            transition: "background 0.15s",
+                          }}
+                          onMouseEnter={e => (e.currentTarget.style.background = "rgba(29,158,117,0.2)")}
+                          onMouseLeave={e => (e.currentTarget.style.background = "rgba(29,158,117,0.1)")}
+                        >+XP</button>
+                      </div>
+
+                      {/* Coming Soon / assignments */}
+                      <div style={{ padding: "10px 14px 12px", borderTop: "0.5px solid var(--bento-border)", background: "var(--bento-bg)", flex: 1 }}>
+                        <div style={{ fontSize: 11, fontWeight: 500, color: "var(--bento-text-secondary)", marginBottom: 6 }}>Coming Soon</div>
+                        {courseAssignments.length > 0 ? (
+                          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                            {courseAssignments.map(a => (
+                              <div key={a.id} style={{ display: "flex", alignItems: "flex-start", gap: 5, padding: "5px 7px", background: "var(--bento-surface)", borderRadius: 7 }}>
+                                <span style={{ width: 5, height: 5, borderRadius: "50%", background: a.urgent ? "#993C1D" : "#378ADD", flexShrink: 0, marginTop: 3 }} />
+                                <div style={{ minWidth: 0 }}>
+                                  <div style={{ fontSize: 10, fontWeight: 500, color: "var(--bento-text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{a.name}</div>
+                                  <div style={{ fontSize: 9, color: a.urgent ? "#993C1D" : "var(--bento-text-tertiary)", marginTop: 1 }}>{a.dueLabel}</div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div style={{ fontSize: 10, color: "var(--bento-text-tertiary)" }}>No upcoming assignments</div>
+                        )}
+                      </div>
+
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          ))}
+                  );
+                })}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
+
 // ─── Main Dashboard ───────────────────────────────────────────────────────────
 
 export default function BentoDashboard({ session }: BentoDashboardProps) {
@@ -1144,7 +1095,6 @@ export default function BentoDashboard({ session }: BentoDashboardProps) {
   const [showDropdown, setShowDropdown] = useState(false);
   const year = new Date().getFullYear();
   const initials = getInitials(session.user?.name);
-  
 
   return (
     <>
@@ -1208,16 +1158,15 @@ export default function BentoDashboard({ session }: BentoDashboardProps) {
 
             {/* Logo */}
             <div className="bento-card" style={{ padding: "20px", display: "flex", justifyContent: "center", alignItems: "center", backgroundColor: "#DAE0ED", gap: 12 }}>
-              <img 
-              src="/pictures/studibuddlogo/studibuddeggbooks.png"
-              alt="StudiBudd Logo" 
-              width={169} height={80} style={{ borderRadius: 10, flexShrink: 0, objectFit: "contain"}} />
-              <div>
-              </div>
+              <img
+                src="/pictures/studibuddlogo/studibuddeggbooks.png"
+                alt="StudiBudd Logo"
+                width={169} height={80} style={{ borderRadius: 10, flexShrink: 0, objectFit: "contain" }}
+              />
             </div>
 
             {/* Canvas Connect */}
-            <CanvasConnect onConnected={() => setRefreshKey(k => k+1)}   />
+            <CanvasConnect onConnected={() => setRefreshKey(k => k + 1)} />
 
             {/* Calendar */}
             <div className="bento-card">
@@ -1226,162 +1175,132 @@ export default function BentoDashboard({ session }: BentoDashboardProps) {
 
             {/* Assignments */}
             <div className="bento-card">
-            <Assignments refreshKey={refreshKey} />
+              <Assignments refreshKey={refreshKey} />
             </div>
 
           </div>
 
-{/* ══ RIGHT COLUMN ══ */}
-<div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {/* ══ RIGHT COLUMN ══ */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
 
-{/* Top bar */}
-<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-  <div style={{ display: "flex", gap: 4 }}>
-    <a href="#features" className="bento-nav-link">How it works</a>
-  </div>
-  <div
-    style={{ position: "relative" }}
-    onMouseEnter={() => setShowDropdown(true)}
-    onMouseLeave={() => setShowDropdown(false)}
-  >
-    <div style={{
-      background: "var(--bento-bg)",
-      border: "0.5px solid var(--bento-border)",
-      borderRadius: 40, padding: "6px 14px 6px 6px",
-      display: "flex", alignItems: "center", gap: 10,
-      cursor: "default",
-    }}>
-      {session.user?.image ? (
-        <img src={session.user.image} alt={session.user.name ?? "Profile"} width={32} height={32} style={{ borderRadius: "50%", flexShrink: 0 }} />
-      ) : (
-        <div style={{
-          width: 32, height: 32, borderRadius: "50%",
-          background: "#FAEEDA", display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 13, fontWeight: 600, color: "#412402", flexShrink: 0,
-        }}>{initials}</div>
-      )}
-      <div>
-        <div style={{ fontSize: 12, fontWeight: 500, color: "var(--bento-text-primary)" }}>{session.user?.name ?? "Student"}</div>
-        <div style={{ fontSize: 10, color: "var(--bento-text-tertiary)" }}>Student</div>
-      </div>
-      <div style={{ marginLeft: 6 }}>
-        <LoginButton />
-      </div>
-    </div>
+            {/* Top bar */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ display: "flex", gap: 4 }}>
+                <a href="#features" className="bento-nav-link">How it works</a>
+              </div>
+              <div
+                style={{ position: "relative" }}
+                onMouseEnter={() => setShowDropdown(true)}
+                onMouseLeave={() => setShowDropdown(false)}
+              >
+                <div style={{
+                  background: "var(--bento-bg)",
+                  border: "0.5px solid var(--bento-border)",
+                  borderRadius: 40, padding: "6px 14px 6px 6px",
+                  display: "flex", alignItems: "center", gap: 10,
+                  cursor: "default",
+                }}>
+                  {session.user?.image ? (
+                    <img src={session.user.image} alt={session.user.name ?? "Profile"} width={32} height={32} style={{ borderRadius: "50%", flexShrink: 0 }} />
+                  ) : (
+                    <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#FAEEDA", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 600, color: "#412402", flexShrink: 0 }}>{initials}</div>
+                  )}
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 500, color: "var(--bento-text-primary)" }}>{session.user?.name ?? "Student"}</div>
+                    <div style={{ fontSize: 10, color: "var(--bento-text-tertiary)" }}>Student</div>
+                  </div>
+                  <div style={{ marginLeft: 6 }}>
+                    <LoginButton />
+                  </div>
+                </div>
 
-    {/* Invisible bridge — fills the gap so mouse doesn't leave hover zone */}
-    {showDropdown && (
-      <div style={{
-        position: "absolute",
-        top: "100%",
-        right: 0,
-        width: "100%",
-        height: 12,
-        zIndex: 99,
-      }} />
-    )}
+                {showDropdown && (
+                  <div style={{ position: "absolute", top: "100%", right: 0, width: "100%", height: 12, zIndex: 99 }} />
+                )}
 
-    {/* Dropdown */}
-    {showDropdown && (
-      <div style={{
-        position: "absolute", top: "calc(100% + 4px)", right: 0,
-        background: "var(--bento-bg)",
-        border: "0.5px solid var(--bento-border)",
-        borderRadius: 12, padding: "6px",
-        minWidth: 160, zIndex: 100,
-        boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-      }}>
-        {([
-          { label: "⚙️  Settings", href: "/settings" },
-        ] as { label: string; href: string }[]).map(item => (
-          <a
-            key={item.href}
-            href={item.href}
-            style={{
-              display: "block", fontSize: 12,
-              color: "var(--bento-text-primary)",
-              textDecoration: "none", padding: "8px 12px",
-              borderRadius: 8, transition: "background 0.12s",
-            }}
-            onMouseEnter={e => (e.currentTarget.style.background = "var(--bento-surface)")}
-            onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-          >{item.label}</a>
-        ))}
-      </div>
-    )}
-  </div>
-</div>
+                {showDropdown && (
+                  <div style={{
+                    position: "absolute", top: "calc(100% + 4px)", right: 0,
+                    background: "var(--bento-bg)",
+                    border: "0.5px solid var(--bento-border)",
+                    borderRadius: 12, padding: "6px",
+                    minWidth: 160, zIndex: 100,
+                    boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+                  }}>
+                    {([{ label: "⚙️  Settings", href: "/settings" }] as { label: string; href: string }[]).map(item => (
+                      <a
+                        key={item.href}
+                        href={item.href}
+                        style={{ display: "block", fontSize: 12, color: "var(--bento-text-primary)", textDecoration: "none", padding: "8px 12px", borderRadius: 8, transition: "background 0.12s" }}
+                        onMouseEnter={e => (e.currentTarget.style.background = "var(--bento-surface)")}
+                        onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                      >{item.label}</a>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
 
-{/* ── Focus Board ── */}
-<FocusBoard refreshKey={refreshKey}/>
+            {/* Focus Board */}
+            <FocusBoard refreshKey={refreshKey} />
 
-{/* Game */}
-{showGame && (
-  <div className="bento-card" id="game">
-    <div style={{
-      display: "flex", alignItems: "center", justifyContent: "space-between",
-      padding: "14px 18px 12px", borderBottom: "0.5px solid var(--bento-border)",
-    }}>
-      <span style={{ fontSize: 13, fontWeight: 500, color: "var(--bento-text-primary)" }}>StudiBudd Game</span>
-      <button onClick={() => setShowGame(false)} style={{
-        fontSize: 11, color: "var(--bento-text-secondary)",
-        background: "none", border: "0.5px solid var(--bento-border)",
-        borderRadius: 6, padding: "3px 10px", cursor: "pointer",
-      }}>Close</button>
-    </div>
-    <div style={{ padding: 20 }}>
-      <StudyBuddyGame />
-    </div>
-  </div>
-)}
+            {/* Game */}
+            {showGame && (
+              <div className="bento-card" id="game">
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px 12px", borderBottom: "0.5px solid var(--bento-border)" }}>
+                  <span style={{ fontSize: 13, fontWeight: 500, color: "var(--bento-text-primary)" }}>StudiBudd Game</span>
+                  <button onClick={() => setShowGame(false)} style={{ fontSize: 11, color: "var(--bento-text-secondary)", background: "none", border: "0.5px solid var(--bento-border)", borderRadius: 6, padding: "3px 10px", cursor: "pointer" }}>Close</button>
+                </div>
+                <div style={{ padding: 20 }}>
+                  <StudyBuddyGame />
+                </div>
+              </div>
+            )}
 
-{/* Features */}
-<div className="bento-card" id="features" style={{ padding: "20px 24px" }}>
-  <div style={{ marginBottom: 16 }}>
-    <h2 style={{ fontSize: 16, fontWeight: 600, color: "var(--bento-text-primary)", margin: 0 }}>How it works</h2>
-    <p style={{ fontSize: 12, color: "var(--bento-text-secondary)", marginTop: 4 }}>Find the motivation to stay on track by growing with a buddy.</p>
-  </div>
-  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
-    {[
-      { dot: "#1D9E75", title: "Choose an egg", text: "Pick the creatures you want to represent your courses" },
-      { dot: "#378ADD", title: "Complete assignments", text: "Completing assignments produces XP for your egg." },
-      { dot: "#BA7517", title: "Hatch & level up", text: "XP → levels → streak keeps going." },
-    ].map(f => (
-      <div key={f.title} style={{ background: "var(--bento-surface)", borderRadius: 10, padding: "12px 14px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-          <span style={{ width: 7, height: 7, borderRadius: "50%", background: f.dot, display: "inline-block", flexShrink: 0 }} />
-          <span style={{ fontSize: 12, fontWeight: 500, color: "var(--bento-text-primary)" }}>{f.title}</span>
+            {/* Features */}
+            <div className="bento-card" id="features" style={{ padding: "20px 24px" }}>
+              <div style={{ marginBottom: 16 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 600, color: "var(--bento-text-primary)", margin: 0 }}>How it works</h2>
+                <p style={{ fontSize: 12, color: "var(--bento-text-secondary)", marginTop: 4 }}>Find the motivation to stay on track by growing with a buddy.</p>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+                {[
+                  { dot: "#1D9E75", title: "Choose an egg", text: "Pick the creatures you want to represent your courses" },
+                  { dot: "#378ADD", title: "Complete assignments", text: "Completing assignments produces XP for your egg." },
+                  { dot: "#BA7517", title: "Hatch & level up", text: "XP → levels → streak keeps going." },
+                ].map(f => (
+                  <div key={f.title} style={{ background: "var(--bento-surface)", borderRadius: 10, padding: "12px 14px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                      <span style={{ width: 7, height: 7, borderRadius: "50%", background: f.dot, display: "inline-block", flexShrink: 0 }} />
+                      <span style={{ fontSize: 12, fontWeight: 500, color: "var(--bento-text-primary)" }}>{f.title}</span>
+                    </div>
+                    <p style={{ fontSize: 11, color: "var(--bento-text-secondary)", margin: 0, lineHeight: 1.5 }}>{f.text}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Contact */}
+            <div className="bento-card" id="contact" style={{ padding: "20px 24px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+                <div>
+                  <h2 style={{ fontSize: 16, fontWeight: 600, color: "var(--bento-text-primary)", margin: 0 }}>Contact</h2>
+                  <p style={{ fontSize: 12, color: "var(--bento-text-secondary)", marginTop: 4, maxWidth: 380 }}>
+                    Want StudiBudd for your school? Email us and we'll build new subjects with you.
+                  </p>
+                </div>
+                <a href="mailto:studibuddcontact@gmail.com" style={{ display: "inline-block", background: "#111827", color: "#fff", fontSize: 12, fontWeight: 500, padding: "8px 18px", borderRadius: 10, textDecoration: "none" }}>Email StudiBudd</a>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div style={{ textAlign: "center", paddingBottom: 8 }}>
+              <span style={{ fontSize: 11, color: "var(--bento-text-tertiary)" }}>© {year} StudiBudd</span>
+            </div>
+
+          </div>
         </div>
-        <p style={{ fontSize: 11, color: "var(--bento-text-secondary)", margin: 0, lineHeight: 1.5 }}>{f.text}</p>
       </div>
-    ))}
-  </div>
-</div>
-
-{/* Contact */}
-<div className="bento-card" id="contact" style={{ padding: "20px 24px" }}>
-  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-    <div>
-      <h2 style={{ fontSize: 16, fontWeight: 600, color: "var(--bento-text-primary)", margin: 0 }}>Contact</h2>
-      <p style={{ fontSize: 12, color: "var(--bento-text-secondary)", marginTop: 4, maxWidth: 380 }}>
-        Want StudiBudd for your school? Email us and we'll build new subjects with you.
-      </p>
-    </div>
-    <a href="mailto:studibuddcontact@gmail.com" style={{
-      display: "inline-block", background: "#111827", color: "#fff",
-      fontSize: 12, fontWeight: 500, padding: "8px 18px", borderRadius: 10, textDecoration: "none",
-    }}>Email StudiBudd</a>
-  </div>
-</div>
-
-{/* Footer */}
-<div style={{ textAlign: "center", paddingBottom: 8 }}>
-  <span style={{ fontSize: 11, color: "var(--bento-text-tertiary)" }}>© {year} StudiBudd</span>
-</div>
-
-</div>
-</div>
-</div>
-</>
-);
+    </>
+  );
 }
