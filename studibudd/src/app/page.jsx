@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useRef, } from "react";
+import { useEffect, useRef } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import LoginButton from "./LoginButton";
 
 const EGGS = [
@@ -31,11 +33,20 @@ const STEPS = [
 ];
 
 export default function SplashPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
   const heroSigninRef   = useRef(null);
   const cornerSigninRef = useRef(null);
   const navRef          = useRef(null);
   const navLogoRef      = useRef(null);
   const revealRefs      = useRef([]);
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.replace("/dashboard");
+    }
+  }, [status, router]);
 
   useEffect(() => {
     const heroSignin   = heroSigninRef.current;
@@ -47,6 +58,23 @@ export default function SplashPage() {
       const y         = window.scrollY;
       const threshold = window.innerHeight * 0.5;
 
+      // Nav glass effect
+      if (nav) {
+        if (y > 50) {
+          nav.style.background     = "rgba(13,13,26,0.78)";
+          nav.style.backdropFilter = "blur(18px)";
+          nav.style.borderBottom   = "1px solid rgba(255,255,255,0.07)";
+        } else {
+          nav.style.background     = "transparent";
+          nav.style.backdropFilter = "none";
+          nav.style.borderBottom   = "none";
+        }
+      }
+
+      // Nav logo fades in on scroll
+      if (navLogo) {
+        navLogo.style.opacity = y > 50 ? "1" : "0";
+      }
 
       // Hero sign-in fades out, corner sign-in fades in
       if (heroSignin && cornerSignin) {
@@ -144,13 +172,14 @@ export default function SplashPage() {
         display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "14px 28px",
         zIndex: 90,
-       background: "linear-gradient(160deg, #0d0d1a 0%, #111827 60%, #0d1117 100%)",
+        transition: "background 0.4s, backdrop-filter 0.4s, border-bottom 0.4s",
+        background: "transparent",
       }}>
         <img
           ref={navLogoRef}
           src="/pictures/studibuddlogo/studibuddeggbooks_whitetext.png"
           alt="StudiBudd"
-          style={{ height: 46, objectFit: "contain", display: "block", opacity: 1 }}
+          style={{ height: 46, objectFit: "contain", display: "block", opacity: 0, transition: "opacity 0.5s" }}
         />
         <a href="/how-it-works" style={{
           fontSize: 13, fontWeight: 600,
@@ -179,7 +208,7 @@ export default function SplashPage() {
         padding: "6px 8px 6px 16px",
       }}>
         <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.55)", whiteSpace: "nowrap" }}>
-        
+          Sign in to play
         </span>
         <LoginButton />
       </div>
@@ -193,13 +222,19 @@ export default function SplashPage() {
         padding: "100px 24px 60px",
         position: "relative", zIndex: 10,
       }}>
-        {/* Floating eggs */}
-        <div style={{ display: "flex", gap: 18, alignItems: "flex-end", marginBottom: 48, flexWrap: "wrap", justifyContent: "center" }}>
-          {EGGS.map((egg, i) => (
-            <div key={i} className={`egg-${i}`} style={{ filter: `drop-shadow(0 8px 22px ${egg.glow}70)` }}>
-              <img src={egg.src} alt="" width={64} height={80} style={{ objectFit: "contain", display: "block" }} />
-            </div>
-          ))}
+        {/* Logo */}
+        <div style={{ marginBottom: 48 }}>
+          <img
+            src="/pictures/studibuddlogo/studibuddeggbooks_whitetext.png"
+            alt="StudiBudd"
+            style={{
+              maxWidth: "min(500px, 85vw)",
+              width: "100%",
+              objectFit: "contain",
+              display: "block",
+              filter: "drop-shadow(0 0 50px rgba(245,158,11,0.4)) drop-shadow(0 0 100px rgba(168,85,247,0.25))",
+            }}
+          />
         </div>
 
         {/* Headline */}
@@ -228,9 +263,9 @@ export default function SplashPage() {
           margin: "0 0 52px",
           color: "rgba(255,255,255,0.42)",
           fontSize: "clamp(0.95rem, 2vw, 1.15rem)",
-          maxWidth: 450, lineHeight: 1.65,
+          maxWidth: 420, lineHeight: 1.65,
         }}>
-          Pick an egg. Do your homework. Watch it grow.
+          Pick an egg. Do your homework. Watch it hatch.
         </p>
 
         {/* Hero sign-in */}
@@ -250,106 +285,153 @@ export default function SplashPage() {
         </div>
       </section>
 
+      {/* ══ SECTION 2: EGGS ══ */}
+      <section style={{
+        padding: "100px 24px 120px",
+        display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+        position: "relative", zIndex: 10,
+        overflow: "hidden",
+      }}>
+        {/* Shimmer divider top */}
+        <div style={{
+          width: "100%", maxWidth: 560, height: 1,
+          background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.18) 50%, transparent)",
+          marginBottom: 80,
+        }} />
+
+        <p ref={addReveal(0)} style={{
+          margin: "0 0 16px",
+          fontSize: 11, fontWeight: 800,
+          letterSpacing: "0.18em", color: "rgba(255,255,255,0.3)",
+          textTransform: "uppercase",
+          opacity: 0, transform: "translateY(20px)",
+          transition: "opacity 0.7s ease, transform 0.7s ease",
+        }}>
+          Choose your buddy
+        </p>
+
+        <h2 ref={addReveal(1)} style={{
+          margin: "0 0 56px",
+          fontSize: "clamp(2rem, 5vw, 3.6rem)",
+          fontWeight: 900, letterSpacing: "-0.03em",
+          lineHeight: 1.1, textAlign: "center",
+          background: "linear-gradient(120deg, #f59e0b 0%, #ef4444 45%, #a855f7 100%)",
+          WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
+          opacity: 0, transform: "translateY(24px)",
+          transition: "opacity 0.8s ease 0.1s, transform 0.8s ease 0.1s",
+        }}>
+          Study. Level up. Evolve.
+        </h2>
+
+        {/* Floating eggs - bigger */}
+        <div ref={addReveal(2)} style={{
+          opacity: 0, transform: "translateY(36px)",
+          transition: "opacity 0.8s ease 0.2s, transform 0.8s ease 0.2s",
+          display: "flex", gap: 28, alignItems: "flex-end", flexWrap: "wrap", justifyContent: "center",
+        }}>
+          {EGGS.map((egg, i) => (
+            <div key={i} className={`egg-${i}`} style={{
+              filter: `drop-shadow(0 12px 32px ${egg.glow}90) drop-shadow(0 0 60px ${egg.glow}40)`,
+            }}>
+              <img src={egg.src} alt="" width={90} height={112} style={{ objectFit: "contain", display: "block" }} />
+            </div>
+          ))}
+        </div>
+
+        <p ref={addReveal(3)} style={{
+          marginTop: 40, marginBottom: 0,
+          color: "rgba(255,255,255,0.35)",
+          fontSize: "clamp(0.9rem, 2vw, 1.05rem)",
+          maxWidth: 400, textAlign: "center", lineHeight: 1.7,
+          opacity: 0, transform: "translateY(20px)",
+          transition: "opacity 0.8s ease 0.3s, transform 0.8s ease 0.3s",
+        }}>
+          Each egg is tied to a course. Complete real assignments to earn XP and watch them grow.
+        </p>
+
+        {/* Shimmer divider bottom */}
+        <div style={{
+          width: "100%", maxWidth: 560, height: 1,
+          background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.18) 50%, transparent)",
+          marginTop: 80,
+        }} />
+      </section>
+
       {/* ══ SECTION 3: HOW IT WORKS ══ */}
       <section style={{
-        padding: "20px 24px 100px",
+        padding: "20px 24px 120px",
         position: "relative", zIndex: 10,
-        maxWidth: 920, margin: "0 auto",
+        maxWidth: 960, margin: "0 auto",
       }}>
-        <p ref={addReveal(2)} style={{
+        <p ref={addReveal(4)} style={{
           textAlign: "center", fontSize: 11, fontWeight: 800,
-          letterSpacing: "0.16em", color: "rgba(255,255,255,0.22)",
-          textTransform: "uppercase", marginBottom: 36,
+          letterSpacing: "0.18em", color: "rgba(255,255,255,0.25)",
+          textTransform: "uppercase", marginBottom: 16,
           opacity: 0, transform: "translateY(20px)",
           transition: "opacity 0.7s ease, transform 0.7s ease",
         }}>
           How it works
         </p>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14 }}>
+        <h2 ref={addReveal(5)} style={{
+          textAlign: "center",
+          fontSize: "clamp(1.6rem, 4vw, 2.6rem)",
+          fontWeight: 900, letterSpacing: "-0.03em",
+          color: "#fff", marginBottom: 56,
+          opacity: 0, transform: "translateY(24px)",
+          transition: "opacity 0.8s ease 0.1s, transform 0.8s ease 0.1s",
+        }}>
+          Three steps to hatch something great
+        </h2>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 18 }}>
           {STEPS.map((s, i) => (
-            <div key={s.num} ref={addReveal(3 + i)} className="sb-step" style={{
+            <div key={s.num} ref={addReveal(6 + i)} className="sb-step" style={{
               opacity: 0, transform: "translateY(28px)",
-              transition: `opacity 0.7s ease ${i * 0.12}s, transform 0.7s ease ${i * 0.12}s`,
+              transition: `opacity 0.7s ease ${i * 0.15}s, transform 0.7s ease ${i * 0.15}s`,
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              borderRadius: 20,
+              padding: "32px 28px",
             }}>
-              <div style={{ fontSize: 11, fontWeight: 800, color: "rgba(255,255,255,0.2)", letterSpacing: "0.12em", marginBottom: 10 }}>{s.num}</div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: "#fff", marginBottom: 8 }}>{s.title}</div>
-              <div style={{ fontSize: 13, color: "rgba(255,255,255,0.44)", lineHeight: 1.6 }}>{s.body}</div>
+              <div style={{
+                display: "inline-flex", alignItems: "center", justifyContent: "center",
+                width: 36, height: 36, borderRadius: 10, marginBottom: 18,
+                background: "linear-gradient(135deg, rgba(245,158,11,0.25), rgba(168,85,247,0.25))",
+                border: "1px solid rgba(255,255,255,0.12)",
+                fontSize: 13, fontWeight: 900, color: "rgba(255,255,255,0.7)",
+              }}>{s.num}</div>
+              <div style={{ fontSize: 17, fontWeight: 800, color: "#fff", marginBottom: 10 }}>{s.title}</div>
+              <div style={{ fontSize: 14, color: "rgba(255,255,255,0.48)", lineHeight: 1.65 }}>{s.body}</div>
             </div>
           ))}
         </div>
-      </section>
-
-{/* ══ SECTION 2: LOGO CENTERPIECE ══ */}
-<section style={{
-        padding: "80px 24px 100px",
-        display: "flex", flexDirection: "column",
-        alignItems: "center", justifyContent: "center",
-        position: "relative", zIndex: 10,
-      }}>
-        {/* Shimmer divider top */}
-        <div style={{
-          width: "100%", maxWidth: 560, height: 1,
-          background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.14) 50%, transparent)",
-          marginBottom: 80,
-        }} />
-
-        {/* Big logo */}
-        <div ref={addReveal(0)} style={{
-          opacity: 0, transform: "translateY(36px)",
-          transition: "opacity 0.8s ease, transform 0.8s ease",
-        }}>
-          <img
-            src="/pictures/studibuddlogo/studibuddeggbooks_whitetext.png"
-            alt="StudiBudd"
-            style={{
-              maxWidth: "min(700px, 90vw)",
-              width: "100%",
-              objectFit: "contain",
-              display: "block",
-              filter: "drop-shadow(0 0 50px rgba(245,158,11,0.4)) drop-shadow(0 0 100px rgba(168,85,247,0.25))",
-            }}
-          />
-        </div>
-
-        <p ref={addReveal(1)} style={{
-          marginTop: 28, marginBottom: 0,
-          color: "rgba(255,255,255,0.3)",
-          fontSize: "clamp(0.85rem, 2vw, 1.05rem)",
-          letterSpacing: "0.12em",
-          fontWeight: 700,
-          textTransform: "uppercase",
-          opacity: 0, transform: "translateY(24px)",
-          transition: "opacity 0.8s ease 0.15s, transform 0.8s ease 0.15s",
-        }}>
-          Study. Level up. Evolve.
-        </p>
-
-        {/* Shimmer divider bottom */}
-        <div style={{
-          width: "100%", maxWidth: 560, height: 1,
-          background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.14) 50%, transparent)",
-          marginTop: 80,
-        }} />
       </section>
 
       {/* ══ FOOTER CTA ══ */}
       <footer style={{
         position: "relative", zIndex: 10,
         display: "flex", flexDirection: "column",
-        alignItems: "center", gap: 16,
-        padding: "48px 32px 64px",
-        borderTop: "1px solid rgba(255,255,255,0.06)",
-        background: "rgba(0,0,0,0.15)",
+        alignItems: "center", gap: 20,
+        padding: "72px 32px 80px",
         textAlign: "center",
+        background: "linear-gradient(180deg, transparent 0%, rgba(245,158,11,0.06) 50%, rgba(168,85,247,0.06) 100%)",
+        borderTop: "1px solid rgba(255,255,255,0.07)",
       }}>
-        <p style={{ margin: 0, fontSize: 12, fontWeight: 800, letterSpacing: "0.12em", color: "rgba(255,255,255,0.25)", textTransform: "uppercase" }}>
-          Ready to hatch?
+        <h2 style={{
+          margin: 0,
+          fontSize: "clamp(1.8rem, 4vw, 3rem)",
+          fontWeight: 900, letterSpacing: "-0.03em",
+          background: "linear-gradient(90deg, #f59e0b, #ef4444 50%, #a855f7)",
+          WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
+        }}>
+          Your egg is waiting.
+        </h2>
+        <p style={{ margin: 0, color: "rgba(255,255,255,0.4)", fontSize: "clamp(0.9rem, 2vw, 1.05rem)", maxWidth: 340 }}>
+          Free to join. No credit card. Just do the work.
         </p>
         <LoginButton />
-        <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.18)" }}>
-          Free to join · No credit card needed
-        </p>
       </footer>
     </main>
   );

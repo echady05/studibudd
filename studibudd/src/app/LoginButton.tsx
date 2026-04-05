@@ -40,7 +40,7 @@ export default function LoginButton() {
 
   return (
     <button
-      onClick={() => signIn("google", { callbackUrl: "/" })}
+      onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
       style={{
         display: "inline-flex",
         alignItems: "center",
