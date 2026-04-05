@@ -85,12 +85,18 @@ export default function HowItWorks() {
         </a>
         <a href="/" style={{
           fontSize: 13,
-          color: "rgba(255,255,255,0.4)",
+          fontWeight: 600,
+          color: "rgba(255,255,255,0.8)",
           textDecoration: "none",
-          borderBottom: "1px solid rgba(255,255,255,0.15)",
-          paddingBottom: 2,
+          background: "rgba(255,255,255,0.08)",
+          border: "1px solid rgba(255,255,255,0.15)",
+          borderRadius: 999,
+          padding: "8px 18px",
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
         }}>
-          Back to home
+          ← Home
         </a>
       </nav>
 

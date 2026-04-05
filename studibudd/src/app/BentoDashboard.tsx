@@ -549,8 +549,19 @@ function CanvasConnect({ onConnected }: { onConnected: () => void }) {
             </button>
           </div>
         ) : (
-          <button onClick={() => setShowModal(true)} style={{ width: "100%", textAlign: "left", background: "none", border: "0.5px dashed var(--bento-border-hover)", borderRadius: 10, padding: "10px 14px", cursor: "pointer", color: "var(--bento-text-secondary)", fontSize: 12 }}>
-            + Connect Canvas to see real assignments &amp; courses
+          <button onClick={() => setShowModal(true)} style={{
+            width: "100%", textAlign: "left", cursor: "pointer",
+            background: "linear-gradient(135deg, rgba(99,102,241,0.12), rgba(168,85,247,0.12))",
+            border: "1px solid rgba(99,102,241,0.35)",
+            borderRadius: 14, padding: "16px 18px",
+            display: "flex", alignItems: "center", gap: 14,
+          }}>
+            <span style={{ fontSize: 28, lineHeight: 1, filter: "drop-shadow(0 0 8px rgba(99,102,241,0.6))" }}>🔗</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 3 }}>Connect Canvas</div>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", lineHeight: 1.4 }}>Link your school account to load real assignments and start earning XP</div>
+            </div>
+            <span style={{ fontSize: 18, color: "rgba(255,255,255,0.3)", flexShrink: 0 }}>→</span>
           </button>
         )}
       </div>
@@ -1136,46 +1147,38 @@ export default function BentoDashboard({ session }: BentoDashboardProps) {
     <>
       <style>{`
         :root {
-          --bento-bg: #ffffff;
-          --bento-surface: #f8f8f7;
-          --bento-border: rgba(0,0,0,0.1);
-          --bento-border-hover: rgba(0,0,0,0.22);
-          --bento-text-primary: #111827;
-          --bento-text-secondary: #6b7280;
-          --bento-text-tertiary: #9ca3af;
+          --bento-bg: #1a1f2e;
+          --bento-surface: #111624;
+          --bento-border: rgba(255,255,255,0.08);
+          --bento-border-hover: rgba(255,255,255,0.16);
+          --bento-text-primary: #f0f0f0;
+          --bento-text-secondary: #94a3b8;
+          --bento-text-tertiary: #64748b;
           --bento-radius: 16px;
-        }
-        @media (prefers-color-scheme: dark) {
-          :root {
-            --bento-bg: #1c1c1e;
-            --bento-surface: #2c2c2e;
-            --bento-border: rgba(255,255,255,0.1);
-            --bento-border-hover: rgba(255,255,255,0.22);
-            --bento-text-primary: #f5f5f5;
-            --bento-text-secondary: #a1a1aa;
-            --bento-text-tertiary: #71717a;
-          }
         }
         .bento-card {
           background: var(--bento-bg);
-          border: 0.5px solid var(--bento-border);
+          border: 1px solid var(--bento-border);
           border-radius: var(--bento-radius);
           overflow: hidden;
         }
         .bento-nav-link {
           font-size: 13px;
-          color: var(--bento-text-secondary);
+          font-weight: 600;
+          color: rgba(255,255,255,0.65);
           text-decoration: none;
-          padding: 6px 10px;
-          border-radius: 8px;
-          transition: background 0.15s;
+          padding: 7px 16px;
+          border-radius: 999px;
+          background: rgba(255,255,255,0.07);
+          border: 1px solid rgba(255,255,255,0.1);
+          transition: background 0.15s, color 0.15s;
         }
-        .bento-nav-link:hover { background: var(--bento-surface); }
+        .bento-nav-link:hover { background: rgba(255,255,255,0.12); color: #fff; }
       `}</style>
 
       <div style={{
         minHeight: "100vh",
-        background: "var(--bento-surface)",
+        background: "linear-gradient(160deg, #0d0d1a 0%, #111827 60%, #0d1117 100%)",
         fontFamily: "'DM Sans', system-ui, sans-serif",
         padding: 20,
         boxSizing: "border-box",
@@ -1193,11 +1196,11 @@ export default function BentoDashboard({ session }: BentoDashboardProps) {
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
 
             {/* Logo */}
-            <div className="bento-card" style={{ padding: "20px", display: "flex", justifyContent: "center", alignItems: "center", backgroundColor: "#DAE0ED", gap: 12 }}>
+            <div className="bento-card" style={{ padding: "20px", display: "flex", justifyContent: "center", alignItems: "center", background: "rgba(255,255,255,0.03)" }}>
               <img
-                src="/pictures/studibuddlogo/studibuddeggbooks.png"
+                src="/pictures/studibuddlogo/studibuddeggbooks_whitetext_transparent.png"
                 alt="StudiBudd Logo"
-                width={169} height={80} style={{ borderRadius: 10, flexShrink: 0, objectFit: "contain" }}
+                style={{ width: "100%", maxWidth: 180, height: "auto", objectFit: "contain" }}
               />
             </div>
 
