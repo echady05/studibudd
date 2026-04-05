@@ -1,6 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
 
-// These must be set in your Vercel/Netlify Environment Variables
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_ANON_KEY
@@ -10,27 +9,21 @@ export function normalizeEmail(email) {
   return String(email || "").trim().toLowerCase();
 }
 
-/**
- * Default data structure for a new user
- */
 function defaultUserData(email) {
   return {
     email: normalizeEmail(email),
-    canvas_url: null,
-    canvas_token: null,
+    canvasUrl: null,
+    canvasToken: null,
     xp: 0,
     streak: 0,
     egg_count: 0,
     subject: "science",
-    science_progress: 0,
-    math_progress: 0,
-    main_progress: 0
+    subjectProgress: {},
+    name: null,
+    avatar_url: null,
   };
 }
 
-/**
- * Fetches user data from Supabase
- */
 export async function getUserData(email) {
   const cleanEmail = normalizeEmail(email);
   const { data, error } = await supabase
@@ -39,63 +32,92 @@ export async function getUserData(email) {
     .eq('email', cleanEmail)
     .single();
 
-  if (error && error.code !== 'PGRST116') { // PGRST116 is "No rows found"
+  if (error && error.code !== 'PGRST116') {
     console.error("Supabase Fetch Error:", error);
     return null;
   }
 
-  if (data) {
-    return {
-      ...data,
-      canvasUrl: data.canvas_url,
-      canvasToken: data.canvas_token
-    };
-  }
-  
-  return null;
+  if (!data) return null;
+
+  return {
+    ...data,
+    canvasUrl: data.canvas_url,
+    canvasToken: data.canvas_token,
+    xp: data.xp ?? 0,
+    streak: data.streak ?? 0,
+    egg_count: data.egg_count ?? 0,
+    subject: data.subject ?? "science",
+    subjectProgress: data.subject_progress ?? {},
+    name: data.name ?? null,
+    avatar_url: data.avatar_url ?? null,
+  };
 }
 
-/**
- * Updates user data in Supabase
- */
 export async function updateUserData(email, mutator) {
   const cleanEmail = normalizeEmail(email);
-  
-  // 1. Get current data or create default
+
   let user = await getUserData(cleanEmail);
   if (!user) {
     user = defaultUserData(cleanEmail);
   }
 
-  // 2. Run the mutator from your connect route
+  // Support legacy routes that nest data under user.progress
+  if (!user.progress) {
+    user.progress = {
+      xp: user.xp ?? 0,
+      streak: user.streak ?? 0,
+      eggCount: user.egg_count ?? 0,
+      subject: user.subject ?? "science",
+      subjectProgress: user.subjectProgress ?? {},
+    };
+  }
+
   await mutator(user);
 
-  // 3. Prepare data for Supabase (mapping camelCase to snake_case)
+  // Merge progress back (support both flat and nested writes)
+  const prog = user.progress ?? {};
+  const xp = prog.xp ?? user.xp ?? 0;
+  const streak = prog.streak ?? user.streak ?? 0;
+  const eggCount = prog.eggCount ?? user.egg_count ?? 0;
+  const subject = prog.subject ?? user.subject ?? "science";
+  const subjectProgress = prog.subjectProgress ?? user.subjectProgress ?? {};
+
   const payload = {
     email: cleanEmail,
-    canvas_url: user.canvasUrl,
-    canvas_token: user.canvasToken,
-    xp: user.xp || 0,
-    streak: user.streak || 0,
-    egg_count: user.egg_count || 0,
-    subject: user.subject || "science",
-    updated_at: new Date()
+    canvas_url: user.canvasUrl ?? user.canvas_url ?? null,
+    canvas_token: user.canvasToken ?? user.canvas_token ?? null,
+    xp,
+    streak,
+    egg_count: eggCount,
+    subject,
+    subject_progress: subjectProgress,
+    updated_at: new Date(),
   };
 
-  // 4. Save to Database
+  // Save name/avatar if present on the user object
+  if (user.name) payload.name = user.name;
+  if (user.avatar_url) payload.avatar_url = user.avatar_url;
+
   const { error } = await supabase
     .from('user_connections')
     .upsert(payload, { onConflict: 'email' });
 
   if (error) {
     console.error("Supabase Save Error:", error);
-    throw new Error("Failed to save to Supabase database");
+    throw new Error("Failed to save to Supabase");
   }
 }
 
-/**
- * Loads saved focusboard state (course order + creature stages/XP) for a user
- */
+// Save user's Google profile (name + avatar) — called on sign-in/connect
+export async function saveUserProfile(email, { name, avatar_url }) {
+  const cleanEmail = normalizeEmail(email);
+  const { error } = await supabase
+    .from('user_connections')
+    .upsert({ email: cleanEmail, name, avatar_url, updated_at: new Date() }, { onConflict: 'email' });
+
+  if (error) console.error("Profile save error:", error);
+}
+
 export async function getFocusboardState(email) {
   const cleanEmail = normalizeEmail(email);
   const { data, error } = await supabase
@@ -104,9 +126,7 @@ export async function getFocusboardState(email) {
     .eq('email', cleanEmail)
     .single();
 
-  if (error || !data) {
-    return { courseOrder: null, creatureState: null };
-  }
+  if (error || !data) return { courseOrder: null, creatureState: null };
 
   return {
     courseOrder: data.course_order ?? null,
@@ -114,9 +134,6 @@ export async function getFocusboardState(email) {
   };
 }
 
-/**
- * Saves focusboard state (course order + creature stages/XP) for a user
- */
 export async function saveFocusboardState(email, { courseOrder, creatureState }) {
   const cleanEmail = normalizeEmail(email);
   const { error } = await supabase
@@ -129,7 +146,7 @@ export async function saveFocusboardState(email, { courseOrder, creatureState })
     .eq('email', cleanEmail);
 
   if (error) {
-    console.error("Supabase FocusBoard Save Error:", error);
+    console.error("FocusBoard Save Error:", error);
     throw new Error("Failed to save focusboard state");
   }
 }

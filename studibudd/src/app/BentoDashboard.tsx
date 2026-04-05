@@ -586,8 +586,20 @@ function Assignments({ refreshKey }: { refreshKey: number }) {
       .catch(() => {});
   }, [refreshKey]);
 
-  const toggleDone = (id: number) =>
-    setLocalDone(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
+  const toggleDone = (id: number, urgent: boolean) => {
+    setLocalDone(prev => {
+      const s = new Set(prev);
+      if (s.has(id)) { s.delete(id); return s; }
+      s.add(id);
+      // Award XP when marking done
+      fetch("/api/canvas/complete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assignmentId: id, urgent }),
+      }).catch(() => {});
+      return s;
+    });
+  };
 
   const pending = canvasItems ? canvasItems.filter(a => !localDone.has(a.id)).length : 0;
 
@@ -621,7 +633,7 @@ function Assignments({ refreshKey }: { refreshKey: number }) {
             return (
               <div
                 key={a.id}
-                onClick={() => toggleDone(a.id)}
+                onClick={() => toggleDone(a.id, a.urgent)}
                 style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 10, background: "var(--bento-surface)", border: "0.5px solid transparent", cursor: "pointer", transition: "border-color 0.15s" }}
                 onMouseEnter={e => (e.currentTarget.style.borderColor = "var(--bento-border-hover)")}
                 onMouseLeave={e => (e.currentTarget.style.borderColor = "transparent")}
@@ -1198,7 +1210,7 @@ export default function BentoDashboard({ session }: BentoDashboardProps) {
             {/* Logo */}
             <div className="bento-card" style={{ padding: "20px", display: "flex", justifyContent: "center", alignItems: "center", background: "rgba(255,255,255,0.03)" }}>
               <img
-                src="/pictures/studibuddlogo/studibuddeggbooks_whitetext_transparent.png"
+                src="/pictures/studibuddlogo/studibuddeggbooks_whitetext.png"
                 alt="StudiBudd Logo"
                 style={{ width: "100%", maxWidth: 180, height: "auto", objectFit: "contain" }}
               />

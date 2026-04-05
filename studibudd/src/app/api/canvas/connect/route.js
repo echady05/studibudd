@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-import { updateUserData, normalizeEmail } from "@/lib/db";
+import { updateUserData, saveUserProfile, normalizeEmail } from "@/lib/db";
 
 function normalizeCanvasUrl(raw) {
   let url = String(raw || "").trim().replace(/\/+$/, "");
@@ -51,6 +51,11 @@ export async function POST(req) {
       { status: 400 }
     );
   }
+
+  await saveUserProfile(session.user.email, {
+    name: session.user.name ?? null,
+    avatar_url: session.user.image ?? null,
+  });
 
   await updateUserData(session.user.email, (user) => {
     user.canvasUrl = baseUrl;

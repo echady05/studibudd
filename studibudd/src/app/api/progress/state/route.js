@@ -10,16 +10,15 @@ export async function GET() {
   }
 
   const user = await getUserData(session.user.email);
-  const prog = user?.progress ?? { xp: 0, streak: 0, eggCount: 0, subject: "science", subjectProgress: {} };
-  const subject = prog.subject || "science";
+  const subject = user?.subject ?? "science";
 
   return NextResponse.json({
     progress: {
       subject,
-      progress: prog.subjectProgress?.[subject] ?? 0,
-      xp: prog.xp ?? 0,
-      eggCount: prog.eggCount ?? 0,
-      streak: prog.streak ?? 0,
+      progress: user?.subjectProgress?.[subject] ?? 0,
+      xp: user?.xp ?? 0,
+      eggCount: user?.egg_count ?? 0,
+      streak: user?.streak ?? 0,
     },
   });
 }
