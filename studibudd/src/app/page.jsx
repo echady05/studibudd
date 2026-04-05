@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import LoginButton from "./LoginButton";
 
 const EGGS = [
@@ -31,11 +33,20 @@ const STEPS = [
 ];
 
 export default function SplashPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
   const heroSigninRef   = useRef(null);
   const cornerSigninRef = useRef(null);
   const navRef          = useRef(null);
   const navLogoRef      = useRef(null);
   const revealRefs      = useRef([]);
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.replace("/dashboard");
+    }
+  }, [status, router]);
 
   useEffect(() => {
     const heroSignin   = heroSigninRef.current;
