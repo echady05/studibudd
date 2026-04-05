@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, } from "react";
 import LoginButton from "./LoginButton";
 
 const EGGS = [
@@ -47,23 +47,6 @@ export default function SplashPage() {
       const y         = window.scrollY;
       const threshold = window.innerHeight * 0.5;
 
-      // Nav glass effect
-      if (nav) {
-        if (y > 50) {
-          nav.style.background     = "rgba(13,13,26,0.78)";
-          nav.style.backdropFilter = "blur(18px)";
-          nav.style.borderBottom   = "1px solid rgba(255,255,255,0.07)";
-        } else {
-          nav.style.background     = "transparent";
-          nav.style.backdropFilter = "none";
-          nav.style.borderBottom   = "none";
-        }
-      }
-
-      // Nav logo fades in on scroll
-      if (navLogo) {
-        navLogo.style.opacity = y > 50 ? "1" : "0";
-      }
 
       // Hero sign-in fades out, corner sign-in fades in
       if (heroSignin && cornerSignin) {
@@ -161,14 +144,13 @@ export default function SplashPage() {
         display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "14px 28px",
         zIndex: 90,
-        transition: "background 0.4s, backdrop-filter 0.4s, border-bottom 0.4s",
-        background: "transparent",
+       background: "linear-gradient(160deg, #0d0d1a 0%, #111827 60%, #0d1117 100%)",
       }}>
         <img
           ref={navLogoRef}
           src="/pictures/studibuddlogo/studibuddeggbooks_whitetext.png"
           alt="StudiBudd"
-          style={{ height: 46, objectFit: "contain", display: "block", opacity: 0, transition: "opacity 0.5s" }}
+          style={{ height: 46, objectFit: "contain", display: "block", opacity: 1 }}
         />
         <a href="/how-it-works" style={{
           fontSize: 13, fontWeight: 600,
@@ -197,7 +179,7 @@ export default function SplashPage() {
         padding: "6px 8px 6px 16px",
       }}>
         <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.55)", whiteSpace: "nowrap" }}>
-          Sign in to play
+        
         </span>
         <LoginButton />
       </div>
@@ -246,9 +228,9 @@ export default function SplashPage() {
           margin: "0 0 52px",
           color: "rgba(255,255,255,0.42)",
           fontSize: "clamp(0.95rem, 2vw, 1.15rem)",
-          maxWidth: 420, lineHeight: 1.65,
+          maxWidth: 450, lineHeight: 1.65,
         }}>
-          Pick an egg. Do your homework. Watch it hatch.
+          Pick an egg. Do your homework. Watch it grow.
         </p>
 
         {/* Hero sign-in */}
@@ -268,8 +250,38 @@ export default function SplashPage() {
         </div>
       </section>
 
-      {/* ══ SECTION 2: LOGO CENTERPIECE ══ */}
+      {/* ══ SECTION 3: HOW IT WORKS ══ */}
       <section style={{
+        padding: "20px 24px 100px",
+        position: "relative", zIndex: 10,
+        maxWidth: 920, margin: "0 auto",
+      }}>
+        <p ref={addReveal(2)} style={{
+          textAlign: "center", fontSize: 11, fontWeight: 800,
+          letterSpacing: "0.16em", color: "rgba(255,255,255,0.22)",
+          textTransform: "uppercase", marginBottom: 36,
+          opacity: 0, transform: "translateY(20px)",
+          transition: "opacity 0.7s ease, transform 0.7s ease",
+        }}>
+          How it works
+        </p>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14 }}>
+          {STEPS.map((s, i) => (
+            <div key={s.num} ref={addReveal(3 + i)} className="sb-step" style={{
+              opacity: 0, transform: "translateY(28px)",
+              transition: `opacity 0.7s ease ${i * 0.12}s, transform 0.7s ease ${i * 0.12}s`,
+            }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: "rgba(255,255,255,0.2)", letterSpacing: "0.12em", marginBottom: 10 }}>{s.num}</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: "#fff", marginBottom: 8 }}>{s.title}</div>
+              <div style={{ fontSize: 13, color: "rgba(255,255,255,0.44)", lineHeight: 1.6 }}>{s.body}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+{/* ══ SECTION 2: LOGO CENTERPIECE ══ */}
+<section style={{
         padding: "80px 24px 100px",
         display: "flex", flexDirection: "column",
         alignItems: "center", justifyContent: "center",
@@ -319,36 +331,6 @@ export default function SplashPage() {
           background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.14) 50%, transparent)",
           marginTop: 80,
         }} />
-      </section>
-
-      {/* ══ SECTION 3: HOW IT WORKS ══ */}
-      <section style={{
-        padding: "20px 24px 100px",
-        position: "relative", zIndex: 10,
-        maxWidth: 920, margin: "0 auto",
-      }}>
-        <p ref={addReveal(2)} style={{
-          textAlign: "center", fontSize: 11, fontWeight: 800,
-          letterSpacing: "0.16em", color: "rgba(255,255,255,0.22)",
-          textTransform: "uppercase", marginBottom: 36,
-          opacity: 0, transform: "translateY(20px)",
-          transition: "opacity 0.7s ease, transform 0.7s ease",
-        }}>
-          How it works
-        </p>
-
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14 }}>
-          {STEPS.map((s, i) => (
-            <div key={s.num} ref={addReveal(3 + i)} className="sb-step" style={{
-              opacity: 0, transform: "translateY(28px)",
-              transition: `opacity 0.7s ease ${i * 0.12}s, transform 0.7s ease ${i * 0.12}s`,
-            }}>
-              <div style={{ fontSize: 11, fontWeight: 800, color: "rgba(255,255,255,0.2)", letterSpacing: "0.12em", marginBottom: 10 }}>{s.num}</div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: "#fff", marginBottom: 8 }}>{s.title}</div>
-              <div style={{ fontSize: 13, color: "rgba(255,255,255,0.44)", lineHeight: 1.6 }}>{s.body}</div>
-            </div>
-          ))}
-        </div>
       </section>
 
       {/* ══ FOOTER CTA ══ */}
