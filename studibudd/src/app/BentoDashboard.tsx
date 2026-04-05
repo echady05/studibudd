@@ -690,15 +690,46 @@ function FocusBoard({ refreshKey }: { refreshKey: number }) {
   // Flash effect type per slot
   const [flash, setFlash] = useState<Record<number, "evolve" | "devolve" | "xp" | null>>({});
 
+  // Debounced save to DB whenever order or creatures change
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    fetch("/api/canvas/courses")
-      .then(r => r.json())
-      .then(d => {
-        if (d.connected && Array.isArray(d.courses)) {
-          setCourses(d.courses);
-          const indices = d.courses.map((_: any, i: number) => i);
-          setOrder(indices);
+    if (order.length === 0) return;
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      fetch("/api/focusboard", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ courseOrder: order, creatureState: creatures }),
+      }).catch(() => {});
+    }, 800); // debounce — wait 800ms after last change before saving
+    return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
+  }, [order, creatures]);
+
+  useEffect(() => {
+    // Load courses + saved focusboard state in parallel
+    Promise.all([
+      fetch("/api/canvas/courses").then(r => r.json()),
+      fetch("/api/focusboard").then(r => r.json()),
+    ])
+      .then(([coursesData, savedData]) => {
+        if (coursesData.connected && Array.isArray(coursesData.courses)) {
+          setCourses(coursesData.courses);
+          const indices = coursesData.courses.map((_: any, i: number) => i);
+
+          const savedOrder: number[] | null = savedData.courseOrder ?? null;
+          const savedCreatures: Record<number, CreatureState> | null = savedData.creatureState ?? null;
+
+          // Only restore order if it still matches current course count
+          const validOrder =
+            Array.isArray(savedOrder) &&
+            savedOrder.length === indices.length &&
+            savedOrder.every((v: unknown) => typeof v === "number" && v >= 0 && v < indices.length)
+              ? savedOrder
+              : indices;
+
+          setOrder(validOrder);
           setCreatures(
+            savedCreatures ??
             Object.fromEntries(indices.map((i: number) => [i, { stage: 0, xp: 0 }]))
           );
         }
@@ -967,8 +998,8 @@ function FocusBoard({ refreshKey }: { refreshKey: number }) {
 
                       {/* Course name */}
                       <div style={{ padding: "10px 14px 8px", borderBottom: "0.5px solid var(--bento-border)", background: "var(--bento-bg)", textAlign: "center" }}>
-                        <div style={{ fontSize: 12, fontWeight: 600, color: "var(--bento-text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{slot.course}</div>
-                        <div style={{ fontSize: 10, color: "var(--bento-text-tertiary)", marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{slot.courseCode}</div>
+                        <div style={{ fontSize: 13, fontWeight: 500,  color: "var(--bento-text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{slot.courseCode}</div>
+                        <div style={{ fontSize: 10, fontWeight: 600, color: "var(--bento-text-tertiary)", marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{slot.course}</div>
                       </div>
 
                       {/* Creature image */}

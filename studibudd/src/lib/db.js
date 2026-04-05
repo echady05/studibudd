@@ -44,8 +44,6 @@ export async function getUserData(email) {
     return null;
   }
 
-  // Map database snake_case back to your app's camelCase if needed,
-  // or just return the data object.
   if (data) {
     return {
       ...data,
@@ -70,7 +68,6 @@ export async function updateUserData(email, mutator) {
   }
 
   // 2. Run the mutator from your connect route
-  // The mutator will set user.canvasUrl and user.canvasToken
   await mutator(user);
 
   // 3. Prepare data for Supabase (mapping camelCase to snake_case)
@@ -93,5 +90,46 @@ export async function updateUserData(email, mutator) {
   if (error) {
     console.error("Supabase Save Error:", error);
     throw new Error("Failed to save to Supabase database");
+  }
+}
+
+/**
+ * Loads saved focusboard state (course order + creature stages/XP) for a user
+ */
+export async function getFocusboardState(email) {
+  const cleanEmail = normalizeEmail(email);
+  const { data, error } = await supabase
+    .from('user_connections')
+    .select('course_order, creature_state')
+    .eq('email', cleanEmail)
+    .single();
+
+  if (error || !data) {
+    return { courseOrder: null, creatureState: null };
+  }
+
+  return {
+    courseOrder: data.course_order ?? null,
+    creatureState: data.creature_state ?? null,
+  };
+}
+
+/**
+ * Saves focusboard state (course order + creature stages/XP) for a user
+ */
+export async function saveFocusboardState(email, { courseOrder, creatureState }) {
+  const cleanEmail = normalizeEmail(email);
+  const { error } = await supabase
+    .from('user_connections')
+    .update({
+      course_order: courseOrder ?? null,
+      creature_state: creatureState ?? null,
+      updated_at: new Date(),
+    })
+    .eq('email', cleanEmail);
+
+  if (error) {
+    console.error("Supabase FocusBoard Save Error:", error);
+    throw new Error("Failed to save focusboard state");
   }
 }
