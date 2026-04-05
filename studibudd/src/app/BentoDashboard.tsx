@@ -1222,7 +1222,7 @@ export default function BentoDashboard({ session }: BentoDashboardProps) {
             {/* Top bar */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ display: "flex", gap: 4 }}>
-                <a href="#features" className="bento-nav-link">How it works</a>
+                <a href="/how-it-works" className="bento-nav-link">How it works</a>
               </div>
               <div
                 style={{ position: "relative" }}
@@ -1294,28 +1294,6 @@ export default function BentoDashboard({ session }: BentoDashboardProps) {
             )}
 
             {/* Features */}
-            <div className="bento-card" id="features" style={{ padding: "20px 24px" }}>
-              <div style={{ marginBottom: 16 }}>
-                <h2 style={{ fontSize: 16, fontWeight: 600, color: "var(--bento-text-primary)", margin: 0 }}>How it works</h2>
-                <p style={{ fontSize: 12, color: "var(--bento-text-secondary)", marginTop: 4 }}>Find the motivation to stay on track by growing with a buddy.</p>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
-                {[
-                  { dot: "#1D9E75", title: "Choose an egg", text: "Pick the creatures you want to represent your courses" },
-                  { dot: "#378ADD", title: "Complete assignments", text: "Completing assignments produces XP for your egg." },
-                  { dot: "#BA7517", title: "Hatch & level up", text: "XP → levels → streak keeps going." },
-                ].map(f => (
-                  <div key={f.title} style={{ background: "var(--bento-surface)", borderRadius: 10, padding: "12px 14px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-                      <span style={{ width: 7, height: 7, borderRadius: "50%", background: f.dot, display: "inline-block", flexShrink: 0 }} />
-                      <span style={{ fontSize: 12, fontWeight: 500, color: "var(--bento-text-primary)" }}>{f.title}</span>
-                    </div>
-                    <p style={{ fontSize: 11, color: "var(--bento-text-secondary)", margin: 0, lineHeight: 1.5 }}>{f.text}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
             {/* Contact */}
             <div className="bento-card" id="contact" style={{ padding: "20px 24px" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
