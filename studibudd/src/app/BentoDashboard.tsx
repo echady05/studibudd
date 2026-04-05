@@ -717,7 +717,12 @@ function FocusBoard({ refreshKey }: { refreshKey: number }) {
           const indices = coursesData.courses.map((_: any, i: number) => i);
 
           const savedOrder: number[] | null = savedData.courseOrder ?? null;
-          const savedCreatures: Record<number, CreatureState> | null = savedData.creatureState ?? null;
+          const rawCreatures = savedData.creatureState ?? null;
+const savedCreatures: Record<number, CreatureState> | null = rawCreatures
+  ? Object.fromEntries(
+      Object.entries(rawCreatures).map(([k, v]) => [Number(k), v as CreatureState])
+    )
+  : null;
 
           // Only restore order if it still matches current course count
           const validOrder =
