@@ -6,75 +6,154 @@ export default async function Page() {
   const session = await getServerSession();
 
   if (!session) {
+    const eggs = [
+      { src: "pictures/buddies/pink/egg.png",  color: "#f472b6" },
+      { src: "pictures/buddies/blue/egg.png",  color: "#60a5fa" },
+      { src: "pictures/buddies/green/egg.png", color: "#34d399" },
+      { src: "pictures/buddies/red/egg.png",   color: "#f87171" },
+      { src: "pictures/buddies/grey/egg.png",  color: "#94a3b8" },
+      { src: "pictures/buddies/beige/egg.png", color: "#fbbf24" },
+    ];
+
     return (
-      <main
-        style={{
-          minHeight: "100vh",
+      <main style={{
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        fontFamily: "'DM Sans', system-ui, sans-serif",
+        background: "linear-gradient(160deg, #0d0d1a 0%, #111827 60%, #0d1117 100%)",
+        boxSizing: "border-box",
+        color: "#fff",
+        overflowX: "hidden",
+      }}>
+        <style>{`
+          @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+          }
+          .egg-float { animation: float 3s ease-in-out infinite; }
+          .egg-float:nth-child(2) { animation-delay: 0.4s; }
+          .egg-float:nth-child(3) { animation-delay: 0.8s; }
+          .egg-float:nth-child(4) { animation-delay: 1.2s; }
+          .egg-float:nth-child(5) { animation-delay: 1.6s; }
+          .egg-float:nth-child(6) { animation-delay: 2.0s; }
+          .sb-steps {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            width: 100%;
+            max-width: 820px;
+          }
+          .sb-step {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 22px 20px;
+            text-align: left;
+          }
+          @media (max-width: 680px) {
+            .sb-steps { grid-template-columns: 1fr 1fr; }
+            .sb-steps .sb-step:last-child { grid-column: span 2; }
+          }
+          @media (max-width: 420px) {
+            .sb-steps { grid-template-columns: 1fr; }
+            .sb-steps .sb-step:last-child { grid-column: span 1; }
+          }
+        `}</style>
+
+        {/* Nav */}
+        <nav style={{ display: "flex", alignItems: "center", padding: "18px 32px", flexShrink: 0 }}>
+          <img
+            src="pictures/studibuddlogo/studibuddeggbooks_whitetext.png"
+            alt="StudiBudd"
+            height={44}
+            style={{ objectFit: "contain", display: "block" }}
+          />
+        </nav>
+
+        {/* Main */}
+        <div style={{
+          flex: 1,
           display: "flex",
+          flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          padding: 24,
-          boxSizing: "border-box",
+          padding: "20px 28px 40px",
           textAlign: "center",
-          fontFamily: "'DM Sans', system-ui, sans-serif",
-          background:
-            "radial-gradient(900px 500px at 20% 0%, rgb(88, 81, 63), transparent 60%), radial-gradient(800px 500px at 85% 10%, rgb(88, 81, 63), transparent 60%), linear-gradient(160deg, rgb(88, 81, 63) 0%, rgb(88, 81, 63) 40%, rgb(88, 81, 63) 100%)",
-        }}
-      >
-        <div
-          style={{
-            width: "min(860px, 100%)",
-            borderRadius: 30,
-            border: "1px solid rgba(128, 127, 127, 0.6)",
-            background:
-              "linear-gradient(180deg, rgba(172, 169, 162, 0.92) 0%, rgba(130, 123, 108, 0.92) 100%)",
-            boxShadow: "0 24px 70px rgba(0, 0, 0, 0.41)",
-            backdropFilter: "blur(14px)",
-            WebkitBackdropFilter: "blur(14px)",
-            padding: "36px 28px 34px",
-            overflow: "hidden",
-            isolation: "isolate",
-          }}
-        >
-          <img
-            src="pictures\studibuddlogo\studibuddeggbooks.png"
-            alt="StudiBudd logo"
-            width={920}
-            height={360}
-            style={{
-              width: "100%",
-              maxWidth: 760,
-              height: "auto",
-              display: "block",
-              margin: "0 auto 18px",
-              borderRadius: 20,
-            }}
-          />
-          <h1
-            style={{
-              margin: "0 0 8px",
-              fontSize: "clamp(2.5rem, 7vw, 4.5rem)",
-              fontWeight: 900,
-              letterSpacing: "-0.03em",
-              color: "#2c3e50",
-            }}
-          >
+          width: "100%",
+          boxSizing: "border-box",
+        }}>
+
+          {/* Floating eggs */}
+          <div style={{ display: "flex", gap: 18, alignItems: "flex-end", marginBottom: 40, flexWrap: "wrap", justifyContent: "center" }}>
+            {eggs.map((egg, i) => (
+              <div key={i} className="egg-float" style={{ filter: `drop-shadow(0 6px 18px ${egg.color}55)` }}>
+                <img src={egg.src} alt="" width={56} height={70} style={{ objectFit: "contain", display: "block" }} />
+              </div>
+            ))}
+          </div>
+
+          {/* Headline */}
+          <h1 style={{
+            margin: "0 0 18px",
+            fontSize: "clamp(2.4rem, 6.5vw, 4.5rem)",
+            fontWeight: 900,
+            letterSpacing: "-0.04em",
+            lineHeight: 1.1,
+          }}>
+            The grind hits different<br />
+            <span style={{
+              display: "inline-block",
+              paddingBottom: "0.1em",
+              background: "linear-gradient(90deg, #f59e0b 0%, #ef4444 50%, #a855f7 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+            }}>when something&apos;s hatching.</span>
           </h1>
-          <p
-            style={{
-              margin: "0 0 24px",
-              color: "rgba(0, 0, 0, 0.78)",
-              fontSize: "clamp(1.55rem, 2.6vw, 1.75rem)",
-              fontWeight: 600,
-            }}
-          >
-            Study and Grow Together
+
+          <p style={{
+            margin: "0 0 44px",
+            color: "rgba(255,255,255,0.45)",
+            fontSize: "clamp(0.95rem, 2vw, 1.1rem)",
+            maxWidth: 460,
+            lineHeight: 1.65,
+          }}>
+            Pick an egg. Do your homework. Watch it hatch. Climb the leaderboard. Actually learn something.
           </p>
 
-          <p style={{ margin: "0 0 14px", color: "rgba(255, 0, 0, 0.5)", fontSize: 14 }}>
+          {/* Steps */}
+          <div className="sb-steps">
+            {[
+              { num: "01", title: "Pick your eggs", body: "Choose a buddy for each course. They only grow if you do the work." },
+              { num: "02", title: "Do real assignments", body: "Connect Canvas and complete your actual coursework to earn XP - no fake grinding." },
+              { num: "03", title: "Play, hatch & compete", body: "Battle in the minigame, hatch evolved forms, and see where you rank on the leaderboard." },
+            ].map(s => (
+              <div key={s.num} className="sb-step">
+                <div style={{ fontSize: 11, fontWeight: 800, color: "rgba(255,255,255,0.25)", letterSpacing: "0.1em", marginBottom: 8 }}>{s.num}</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: "#fff", marginBottom: 6 }}>{s.title}</div>
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.55 }}>{s.body}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Sign-in footer */}
+        <div style={{
+          flexShrink: 0,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 10,
+          padding: "24px 32px 40px",
+          borderTop: "1px solid rgba(255,255,255,0.06)",
+        }}>
+          <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.3)" }}>
+            Free to use - sign in with Google to start
           </p>
           <LoginButton />
         </div>
+
       </main>
     );
   }
