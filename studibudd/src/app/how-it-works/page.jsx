@@ -1,3 +1,5 @@
+import LoginButton from "../LoginButton";
+
 export default function HowItWorks() {
   const steps = [
     {
@@ -148,20 +150,9 @@ export default function HowItWorks() {
         </div>
 
         {/* CTA */}
-        <div style={{ marginTop: 56, display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
-          <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.3)" }}>Ready to start?</p>
-          <a href="/" style={{
-            display: "inline-block",
-            background: "linear-gradient(90deg, #f59e0b, #ef4444)",
-            color: "#fff",
-            fontWeight: 700,
-            fontSize: 14,
-            padding: "12px 28px",
-            borderRadius: 12,
-            textDecoration: "none",
-          }}>
-            Get started
-          </a>
+        <div style={{ marginTop: 56, display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+          <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.6)" }}>Ready? Sign in with Google to get started.</p>
+          <LoginButton />
         </div>
       </div>
     </main>
