@@ -62,13 +62,25 @@ export default async function Page() {
         `}</style>
 
         {/* Nav */}
-        <nav style={{ display: "flex", alignItems: "center", padding: "18px 32px", flexShrink: 0 }}>
+        <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 32px", flexShrink: 0 }}>
           <img
-            src="pictures/studibuddlogo/studibuddeggbooks_whitetext.png"
+            src="pictures/studibuddlogo/studibuddeggbooks_whitetext_transparent.png"
             alt="StudiBudd"
             height={44}
             style={{ objectFit: "contain", display: "block" }}
           />
+          <a href="/how-it-works" style={{
+            fontSize: 13,
+            fontWeight: 600,
+            color: "rgba(255,255,255,0.7)",
+            textDecoration: "none",
+            background: "rgba(255,255,255,0.08)",
+            border: "1px solid rgba(255,255,255,0.15)",
+            borderRadius: 999,
+            padding: "7px 16px",
+          }}>
+            How it works
+          </a>
         </nav>
 
         {/* Main */}
@@ -144,14 +156,26 @@ export default async function Page() {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          gap: 10,
-          padding: "24px 32px 40px",
+          gap: 14,
+          padding: "28px 32px 44px",
           borderTop: "1px solid rgba(255,255,255,0.06)",
+          background: "rgba(255,255,255,0.02)",
         }}>
-          <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.3)" }}>
-            Free to use - sign in with Google to start
-          </p>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{
+              display: "inline-block",
+              width: 8, height: 8, borderRadius: "50%",
+              background: "#10b981",
+              boxShadow: "0 0 8px #10b981",
+            }} />
+            <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.75)" }}>
+              Sign in with Google, then connect Canvas to start earning XP
+            </p>
+          </div>
           <LoginButton />
+          <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.25)" }}>
+            Free to use - no credit card needed
+          </p>
         </div>
 
       </main>
