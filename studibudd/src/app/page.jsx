@@ -64,7 +64,7 @@ export default async function Page() {
         {/* Nav */}
         <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 32px", flexShrink: 0 }}>
           <img
-            src="pictures/studibuddlogo/studibuddeggbooks_whitetext_transparent.png"
+            src="pictures/studibuddlogo/studibuddeggbooks_whitetext.png"
             alt="StudiBudd"
             height={44}
             style={{ objectFit: "contain", display: "block" }}
