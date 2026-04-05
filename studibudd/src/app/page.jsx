@@ -222,13 +222,19 @@ export default function SplashPage() {
         padding: "100px 24px 60px",
         position: "relative", zIndex: 10,
       }}>
-        {/* Floating eggs */}
-        <div style={{ display: "flex", gap: 18, alignItems: "flex-end", marginBottom: 48, flexWrap: "wrap", justifyContent: "center" }}>
-          {EGGS.map((egg, i) => (
-            <div key={i} className={`egg-${i}`} style={{ filter: `drop-shadow(0 8px 22px ${egg.glow}70)` }}>
-              <img src={egg.src} alt="" width={64} height={80} style={{ objectFit: "contain", display: "block", transform: "scaleX(-1)" }} />
-            </div>
-          ))}
+        {/* Logo */}
+        <div style={{ marginBottom: 48 }}>
+          <img
+            src="/pictures/studibuddlogo/studibuddeggbooks_whitetext.png"
+            alt="StudiBudd"
+            style={{
+              maxWidth: "min(500px, 85vw)",
+              width: "100%",
+              objectFit: "contain",
+              display: "block",
+              filter: "drop-shadow(0 0 50px rgba(245,158,11,0.4)) drop-shadow(0 0 100px rgba(168,85,247,0.25))",
+            }}
+          />
         </div>
 
         {/* Headline */}
@@ -293,23 +299,17 @@ export default function SplashPage() {
           marginBottom: 80,
         }} />
 
-        {/* Big logo */}
+        {/* Floating eggs */}
         <div ref={addReveal(0)} style={{
           opacity: 0, transform: "translateY(36px)",
           transition: "opacity 0.8s ease, transform 0.8s ease",
+          display: "flex", gap: 18, alignItems: "flex-end", flexWrap: "wrap", justifyContent: "center",
         }}>
-          <img
-            src="/pictures/studibuddlogo/studibuddeggbooks_whitetext.png"
-            alt="StudiBudd"
-            style={{
-              maxWidth: "min(700px, 90vw)",
-              width: "100%",
-              objectFit: "contain",
-              display: "block",
-              filter: "drop-shadow(0 0 50px rgba(245,158,11,0.4)) drop-shadow(0 0 100px rgba(168,85,247,0.25))",
-              transform: "scaleX(-1)",
-            }}
-          />
+          {EGGS.map((egg, i) => (
+            <div key={i} className={`egg-${i}`} style={{ filter: `drop-shadow(0 8px 22px ${egg.glow}70)` }}>
+              <img src={egg.src} alt="" width={64} height={80} style={{ objectFit: "contain", display: "block" }} />
+            </div>
+          ))}
         </div>
 
         <p ref={addReveal(1)} style={{
