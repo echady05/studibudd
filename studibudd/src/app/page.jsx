@@ -226,7 +226,7 @@ export default function SplashPage() {
         <div style={{ display: "flex", gap: 18, alignItems: "flex-end", marginBottom: 48, flexWrap: "wrap", justifyContent: "center" }}>
           {EGGS.map((egg, i) => (
             <div key={i} className={`egg-${i}`} style={{ filter: `drop-shadow(0 8px 22px ${egg.glow}70)` }}>
-              <img src={egg.src} alt="" width={64} height={80} style={{ objectFit: "contain", display: "block" }} />
+              <img src={egg.src} alt="" width={64} height={80} style={{ objectFit: "contain", display: "block", transform: "scaleX(-1)" }} />
             </div>
           ))}
         </div>
@@ -307,6 +307,7 @@ export default function SplashPage() {
               objectFit: "contain",
               display: "block",
               filter: "drop-shadow(0 0 50px rgba(245,158,11,0.4)) drop-shadow(0 0 100px rgba(168,85,247,0.25))",
+              transform: "scaleX(-1)",
             }}
           />
         </div>
