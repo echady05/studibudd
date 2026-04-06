@@ -24,7 +24,7 @@ export async function POST(req) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { canvasUrl, canvasToken } = body;
+  const { canvasUrl, canvasToken, selectedCourseIds, courseEggs } = body;
   if (!canvasUrl || !canvasToken) {
     return NextResponse.json({ error: "canvasUrl and canvasToken are required" }, { status: 400 });
   }
@@ -60,6 +60,8 @@ export async function POST(req) {
   await updateUserData(session.user.email, (user) => {
     user.canvasUrl = baseUrl;
     user.canvasToken = canvasToken;
+    user.selectedCourseIds = Array.isArray(selectedCourseIds) ? selectedCourseIds : null;
+    user.courseEggs = courseEggs ?? {};
   });
 
   const filtered = Array.isArray(courses)

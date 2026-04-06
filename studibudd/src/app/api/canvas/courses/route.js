@@ -23,9 +23,14 @@ export async function GET() {
       return NextResponse.json({ courses: null, connected: false, error: "Canvas token may be expired" });
     }
     const raw = await res.json();
+    const allowedIds = Array.isArray(user.selectedCourseIds) && user.selectedCourseIds.length > 0
+      ? new Set(user.selectedCourseIds.map(Number))
+      : null;
+
     const courses = Array.isArray(raw)
       ? raw
           .filter((c) => c.name && c.workflow_state !== "deleted")
+          .filter((c) => !allowedIds || allowedIds.has(Number(c.id)))
           .map((c) => ({ id: c.id, name: c.name, code: c.course_code }))
       : [];
     return NextResponse.json({ courses, connected: true });

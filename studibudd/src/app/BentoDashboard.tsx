@@ -54,6 +54,9 @@ const MONTHS = [
 const DOW = ["S","M","T","W","T","F","S"];
 const EVENT_COLORS = ["#BA7517","#1D9E75","#378ADD","#993556","#533AB7","#993C1D"];
 const FOCUS_PAGES = 3;
+const CREATURE_FOLDERS = ["beige", "blue", "green", "grey", "pink", "red"];
+const STAGE_FILES = ["egg", "1", "2"];
+const MAX_STAGE = 2;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -316,7 +319,11 @@ function CanvasConnect({ onConnected }: { onConnected: () => void }) {
   const [saving, setSaving] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [error, setError] = useState("");
-  const [preview, setPreview] = useState<{ name: string; courseCount: number } | null>(null);
+  const [preview, setPreview] = useState<{ name: string; courseCount: number; courses: { id: number; name: string; courseCode: string }[] } | null>(null);
+  const [step, setStep] = useState<"credentials" | "customize">("credentials");
+  const [selectedCourseIds, setSelectedCourseIds] = useState<Set<number>>(new Set());
+  const [courseEggs, setCourseEggs] = useState<Record<number, string>>({});
+const [eggPickerStep, setEggPickerStep] = useState<"courses" | "eggs">("courses");
 
   useEffect(() => {
     fetch("/api/canvas/courses")
@@ -356,7 +363,10 @@ function CanvasConnect({ onConnected }: { onConnected: () => void }) {
       });
       const d = await res.json().catch(() => ({}));
       if (!res.ok) { setError(d.error || "Couldn't verify token — double-check it was copied fully."); return; }
-      setPreview({ name: d.userName, courseCount: d.courseCount });
+      const courses = d.courses ?? [];
+setPreview({ name: d.userName, courseCount: courses.length, courses });
+setSelectedCourseIds(new Set(courses.map((c: { id: number }) => c.id)));
+setStep("customize");
     } catch { setError("Network error — check your connection."); }
     finally { setVerifying(false); }
   }
@@ -369,7 +379,12 @@ function CanvasConnect({ onConnected }: { onConnected: () => void }) {
       const res = await fetch("/api/canvas/connect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ canvasUrl: cleanUrl, canvasToken: token.trim() }),
+        body: JSON.stringify({
+          canvasUrl: cleanUrl,
+          canvasToken: token.trim(),
+          selectedCourseIds: Array.from(selectedCourseIds),
+          courseEggs,
+        }),
       });
       const d = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -381,6 +396,9 @@ function CanvasConnect({ onConnected }: { onConnected: () => void }) {
       setConnectedName(preview?.name ?? "");
       setShowModal(false);
       setPreview(null);
+      setStep("credentials");
+      setEggPickerStep("courses");
+      onConnected();
       router.refresh();
     } catch (err) {
       setError("Network error — check your connection.");
@@ -430,7 +448,7 @@ function CanvasConnect({ onConnected }: { onConnected: () => void }) {
             }}
           >
             <button
-              onClick={() => setShowModal(false)}
+              onClick={() => { setShowModal(false); setStep("credentials"); setPreview(null); setError(""); }}
               style={{
                 position: "absolute", top: 16, right: 16,
                 background: "var(--bento-surface)",
@@ -507,27 +525,157 @@ function CanvasConnect({ onConnected }: { onConnected: () => void }) {
               <div style={{ fontSize: 11, color: "#dc2626", background: "rgba(220,38,38,0.07)", borderRadius: 8, padding: "8px 12px", marginBottom: 12 }}>{error}</div>
             )}
 
-            {preview && (
-              <div style={{ fontSize: 11, color: "#1D9E75", background: "rgba(29,158,117,0.08)", borderRadius: 8, padding: "8px 12px", marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>
-                <span>✓</span>
-                <span>Found <strong>{preview.courseCount} courses</strong> for <strong>{preview.name}</strong> — looks good!</span>
-              </div>
-            )}
-
-            <div style={{ display: "flex", gap: 8 }}>
-              {!preview ? (
-                <button onClick={verify} disabled={verifying || !token.trim()} style={{ fontSize: 12, padding: "8px 14px", background: "var(--bento-surface)", color: "var(--bento-text-primary)", border: "0.5px solid var(--bento-border-hover)", borderRadius: 10, cursor: verifying || !token.trim() ? "not-allowed" : "pointer", flex: 1, opacity: !token.trim() ? 0.5 : 1 }}>
-                  {verifying ? "Verifying..." : "Verify Token"}
-                </button>
-              ) : (
-                <button onClick={connect} disabled={saving} style={{ fontSize: 12, padding: "8px 14px", background: "#111827", color: "#fff", border: "none", borderRadius: 10, cursor: "pointer", flex: 1 }}>
-                  {saving ? "Connecting..." : "Save & Connect"}
-                </button>
-              )}
-              <button onClick={() => { setShowModal(false); setPreview(null); setError(""); }} style={{ fontSize: 12, padding: "8px 14px", background: "none", border: "0.5px solid var(--bento-border)", borderRadius: 10, cursor: "pointer", color: "var(--bento-text-secondary)" }}>
+<div style={{ display: "flex", gap: 8 }}>
+              <button onClick={verify} disabled={verifying || !token.trim()} style={{ fontSize: 12, padding: "8px 14px", background: "var(--bento-surface)", color: "var(--bento-text-primary)", border: "0.5px solid var(--bento-border-hover)", borderRadius: 10, cursor: verifying || !token.trim() ? "not-allowed" : "pointer", flex: 1, opacity: !token.trim() ? 0.5 : 1 }}>
+                {verifying ? "Verifying..." : "Verify Token"}
+              </button>
+              <button onClick={() => { setShowModal(false); setStep("credentials"); setPreview(null); setError(""); }} style={{ fontSize: 12, padding: "8px 14px", background: "none", border: "0.5px solid var(--bento-border)", borderRadius: 10, cursor: "pointer", color: "var(--bento-text-secondary)" }}>
                 Cancel
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+{/* ── Step 2: Customize modal ── */}
+{step === "customize" && preview && (
+        <div
+          onClick={() => { setStep("credentials"); setEggPickerStep("courses"); }}
+          style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.4)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ background: "var(--bento-bg)", borderRadius: 20, border: "0.5px solid var(--bento-border)", boxShadow: "0 24px 60px rgba(0,0,0,0.18)", width: "100%", maxWidth: 520, maxHeight: "90vh", overflowY: "auto", padding: "28px 28px 24px", position: "relative" }}
+          >
+            {/* Back / close buttons */}
+            <button
+              onClick={() => {
+                if (eggPickerStep === "eggs") setEggPickerStep("courses");
+                else setStep("credentials");
+              }}
+              style={{ position: "absolute", top: 16, left: 16, background: "var(--bento-surface)", border: "0.5px solid var(--bento-border)", borderRadius: 8, padding: "4px 10px", cursor: "pointer", fontSize: 12, color: "var(--bento-text-secondary)" }}
+            >← Back</button>
+            <button
+              onClick={() => { setStep("credentials"); setShowModal(false); setPreview(null); setError(""); setEggPickerStep("courses"); }}
+              style={{ position: "absolute", top: 16, right: 16, background: "var(--bento-surface)", border: "0.5px solid var(--bento-border)", borderRadius: 8, width: 28, height: 28, cursor: "pointer", fontSize: 14, color: "var(--bento-text-secondary)", display: "flex", alignItems: "center", justifyContent: "center" }}
+            >✕</button>
+
+            {/* Step indicator */}
+            <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 20, marginTop: 8 }}>
+              {["Select Courses", "Pick Eggs"].map((label, i) => {
+                const active = (i === 0 && eggPickerStep === "courses") || (i === 1 && eggPickerStep === "eggs");
+                return (
+                  <div key={label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <div style={{ width: 20, height: 20, borderRadius: "50%", background: active ? "#6366f1" : "var(--bento-surface)", border: `1px solid ${active ? "#6366f1" : "var(--bento-border)"}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 600, color: active ? "#fff" : "var(--bento-text-tertiary)" }}>{i + 1}</div>
+                    <span style={{ fontSize: 11, color: active ? "var(--bento-text-primary)" : "var(--bento-text-tertiary)", fontWeight: active ? 600 : 400 }}>{label}</span>
+                    {i === 0 && <span style={{ fontSize: 11, color: "var(--bento-text-tertiary)" }}>→</span>}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* ── STEP 1: Course selection ── */}
+            {eggPickerStep === "courses" && (
+              <>
+                <div style={{ fontSize: 15, fontWeight: 600, color: "var(--bento-text-primary)", marginBottom: 4 }}>Select courses to track</div>
+                <div style={{ fontSize: 12, color: "var(--bento-text-tertiary)", marginBottom: 16 }}>
+                  Found <strong style={{ color: "var(--bento-text-primary)" }}>{preview.courseCount} courses</strong> for <strong style={{ color: "var(--bento-text-primary)" }}>{preview.name}</strong>. Uncheck any you don't want.
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 16 }}>
+                  {preview.courses.map(course => {
+                    const checked = selectedCourseIds.has(course.id);
+                    return (
+                      <div
+                        key={course.id}
+                        onClick={() => setSelectedCourseIds(prev => {
+                          const s = new Set(prev);
+                          if (s.has(course.id)) s.delete(course.id); else s.add(course.id);
+                          return s;
+                        })}
+                        style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 10, background: checked ? "rgba(99,102,241,0.1)" : "var(--bento-surface)", border: `0.5px solid ${checked ? "rgba(99,102,241,0.4)" : "var(--bento-border)"}`, cursor: "pointer", transition: "all 0.15s" }}
+                      >
+                        <div style={{ width: 16, height: 16, borderRadius: 4, border: checked ? "none" : "1.5px solid var(--bento-border-hover)", background: checked ? "#6366f1" : "transparent", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          {checked && <svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3.5 6L8 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 12, fontWeight: 500, color: "var(--bento-text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{course.name}</div>
+                          {course.courseCode && <div style={{ fontSize: 10, color: "var(--bento-text-tertiary)" }}>{course.courseCode}</div>}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div style={{ fontSize: 10, color: "var(--bento-text-tertiary)", marginBottom: 16 }}>
+                  {selectedCourseIds.size} of {preview.courses.length} selected
+                </div>
+                <button
+                  onClick={() => {
+                    // Initialize eggs for selected courses that don't have one yet
+                    setCourseEggs(prev => {
+                      const next = { ...prev };
+                      selectedCourseIds.forEach(id => { if (!next[id]) next[id] = "beige"; });
+                      return next;
+                    });
+                    setEggPickerStep("eggs");
+                  }}
+                  disabled={selectedCourseIds.size === 0}
+                  style={{ width: "100%", fontSize: 13, fontWeight: 600, padding: "12px", background: selectedCourseIds.size === 0 ? "var(--bento-surface)" : "#111827", color: selectedCourseIds.size === 0 ? "var(--bento-text-tertiary)" : "#fff", border: "none", borderRadius: 12, cursor: selectedCourseIds.size === 0 ? "not-allowed" : "pointer" }}
+                >
+                  Next: Pick Eggs →
+                </button>
+              </>
+            )}
+
+            {/* ── STEP 2: Egg per course ── */}
+            {eggPickerStep === "eggs" && (
+              <>
+                <div style={{ fontSize: 15, fontWeight: 600, color: "var(--bento-text-primary)", marginBottom: 4 }}>Pick an egg for each course</div>
+                <div style={{ fontSize: 12, color: "var(--bento-text-tertiary)", marginBottom: 20 }}>
+                  Each course gets its own creature that grows as you complete assignments.
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 20, marginBottom: 20 }}>
+                  {preview.courses.filter(c => selectedCourseIds.has(c.id)).map(course => (
+                    <div key={course.id}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "var(--bento-text-primary)", marginBottom: 8, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {course.name}
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
+                        {CREATURE_FOLDERS.map(color => {
+                          const selected = courseEggs[course.id] === color;
+                          return (
+                            <div
+                              key={color}
+                              onClick={() => setCourseEggs(prev => ({ ...prev, [course.id]: color }))}
+                              style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "8px 4px", borderRadius: 10, background: selected ? "rgba(99,102,241,0.1)" : "var(--bento-surface)", border: `1px solid ${selected ? "rgba(99,102,241,0.5)" : "var(--bento-border)"}`, cursor: "pointer", transition: "all 0.15s" }}
+                            >
+                              <img
+                                src={`/pictures/buddies/${color}/egg.png`}
+                                alt={`${color} egg`}
+                                style={{ width: 40, height: 40, objectFit: "contain", imageRendering: "pixelated" }}
+                                onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
+                              />
+                              <span style={{ fontSize: 10, fontWeight: 500, color: selected ? "#a5b4fc" : "var(--bento-text-secondary)", textTransform: "capitalize" }}>{color}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {error && (
+                  <div style={{ fontSize: 11, color: "#dc2626", background: "rgba(220,38,38,0.07)", borderRadius: 8, padding: "8px 12px", marginBottom: 12 }}>{error}</div>
+                )}
+
+                <button
+                  onClick={connect}
+                  disabled={saving}
+                  style={{ width: "100%", fontSize: 13, fontWeight: 600, padding: "12px", background: "#111827", color: "#fff", border: "none", borderRadius: 12, cursor: saving ? "not-allowed" : "pointer" }}
+                >
+                  {saving ? "Connecting..." : `Start with ${selectedCourseIds.size} course${selectedCourseIds.size !== 1 ? "s" : ""} →`}
+                </button>
+                </>
+            )}
           </div>
         </div>
       )}
@@ -568,9 +716,6 @@ function CanvasConnect({ onConnected }: { onConnected: () => void }) {
     </>
   );
 }
-
-// ─── Assignments ──────────────────────────────────────────────────────────────
-
 function Assignments({ refreshKey }: { refreshKey: number }) {
   const [canvasItems, setCanvasItems] = useState<CanvasAssignment[] | null>(null);
   const [localDone, setLocalDone] = useState<Set<number>>(new Set());
@@ -662,9 +807,6 @@ function Assignments({ refreshKey }: { refreshKey: number }) {
 // ─── Focus Board ──────────────────────────────────────────────────────────────
 
 const XP_PER_LEVEL = 100;
-const CREATURE_FOLDERS = ["beige", "blue", "green", "grey", "pink", "red"];
-const STAGE_FILES = ["egg", "1", "2"];
-const MAX_STAGE = 2;
 
 interface CreatureState {
   stage: number;

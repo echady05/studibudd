@@ -50,6 +50,8 @@ export async function getUserData(email) {
     subjectProgress: data.subject_progress ?? {},
     name: data.name ?? null,
     avatar_url: data.avatar_url ?? null,
+    selectedCourseIds: data.selected_course_ids ?? null,
+    courseEggs: data.course_eggs ?? {},
   };
 }
 
@@ -92,6 +94,8 @@ export async function updateUserData(email, mutator) {
     subject,
     subject_progress: subjectProgress,
     updated_at: new Date(),
+    selected_course_ids: user.selectedCourseIds ?? null,
+    course_eggs: user.courseEggs ?? {},
   };
 
   // Save name/avatar if present on the user object

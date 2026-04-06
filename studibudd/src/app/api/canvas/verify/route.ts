@@ -44,11 +44,18 @@ export async function POST(req: Request) {
       ? courses.filter((c: { name?: string }) => c.name)
       : [];
 
-    return NextResponse.json({
-      valid: true,
-      userName: profile.short_name ?? profile.name ?? "Student",
-      courseCount: activeCourses.length,
-    });
+      console.log("Sample course:", JSON.stringify(activeCourses[0], null, 2));
+
+      return NextResponse.json({
+        valid: true,
+        userName: profile.short_name ?? profile.name ?? "Student",
+        courseCount: activeCourses.length,
+        courses: activeCourses.map((c: { id: number; name?: string; course_code?: string }) => ({
+          id: c.id,
+          name: c.name ?? "",
+          courseCode: c.course_code ?? "",
+        })),
+      });
 
   } catch (err) {
     console.error("Canvas verify error:", err);

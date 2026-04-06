@@ -37,9 +37,18 @@ export async function GET() {
       return NextResponse.json({ assignments: null, connected: false, error: "Canvas token may be expired" });
     }
     const courses = await coursesRes.json();
-    const activeCourses = Array.isArray(courses)
-      ? courses.filter((c) => c.name && c.workflow_state !== "deleted").slice(0, 8)
-      : [];
+    const allowedIds = Array.isArray(user.selectedCourseIds) && user.selectedCourseIds.length > 0
+    ? new Set(user.selectedCourseIds.map(Number))
+    : null;
+    console.log("allowedIds:", allowedIds);
+console.log("user.selectedCourseIds:", user.selectedCourseIds);
+
+  const activeCourses = Array.isArray(courses)
+    ? courses
+        .filter((c) => c.name && c.workflow_state !== "deleted")
+        .filter((c) => !allowedIds || allowedIds.has(Number(c.id)))
+        .slice(0, 8)
+    : [];
 
     // Fetch upcoming assignments for each course in parallel.
     const now = new Date().toISOString();
