@@ -1402,6 +1402,23 @@ export default function BentoDashboard({ session }: BentoDashboardProps) {
                     <div style={{ fontSize: 12, fontWeight: 500, color: "var(--bento-text-primary)" }}>{session.user?.name ?? "Student"}</div>
                     <div style={{ fontSize: 10, color: "var(--bento-text-tertiary)" }}>Student</div>
                   </div>
+                  {/* Dropdown chevron */}
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 12 12"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    style={{
+                      color: "var(--bento-text-tertiary)",
+                      transition: "transform 0.2s ease, color 0.2s ease",
+                      transform: showDropdown ? "rotate(180deg)" : "rotate(0deg)",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <path d="M2 4L6 8L10 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+
                   <div style={{ marginLeft: 6 }}>
                     <LoginButton />
                   </div>
