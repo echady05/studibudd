@@ -692,7 +692,7 @@ setStep("customize");
                 <span style={{ fontSize: 12, fontWeight: 500, color: "var(--bento-text-primary)" }}>Canvas connected</span>
               </div>
               <div style={{ fontSize: 11, color: "var(--bento-text-tertiary)" }}>
-                {connectedName && `${connectedName} · `}{courseCount} course{courseCount !== 1 ? "s" : ""} loaded
+                {connectedName && `${connectedName} · `}{courseCount} course{courseCount !== 1 ? "s" : ""} 
               </div>
             </div>
             <button onClick={disconnect} style={{ fontSize: 11, color: "var(--bento-text-tertiary)", background: "none", border: "0.5px solid var(--bento-border)", borderRadius: 6, padding: "3px 10px", cursor: "pointer" }}>
