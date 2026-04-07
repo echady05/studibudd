@@ -635,10 +635,13 @@ setStep("customize");
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 20, marginBottom: 20 }}>
                   {preview.courses.filter(c => selectedCourseIds.has(c.id)).map(course => (
-                    <div key={course.id}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: "var(--bento-text-primary)", marginBottom: 8, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                        {course.name}
+                    <div key={course.name}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "var(--bento-text-primary)", marginBottom: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {course.courseCode}
                       </div>
+                      <div style={{fontSize:12, fontWeight: 600, color: "var(--bento-text-tertiary)", marginBottom: 5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"}}>
+                        {course.name}
+                        </div>
                       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
                         {CREATURE_FOLDERS.map(color => {
                           const selected = courseEggs[course.id] === color;
