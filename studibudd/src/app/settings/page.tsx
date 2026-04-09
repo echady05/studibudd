@@ -74,27 +74,12 @@ function SettingRow({
   children: React.ReactNode;
 }) {
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: 24,
-        padding: "16px 0",
-        borderBottom: "0.5px solid var(--bento-border)",
-      }}
-    >
-      <div style={{ flex: 1 }}>
-        <div style={{ fontSize: 13, fontWeight: 500, color: "var(--bento-text-primary)", marginBottom: description ? 3 : 0 }}>
-          {label}
-        </div>
-        {description && (
-          <div style={{ fontSize: 11, color: "var(--bento-text-tertiary)", lineHeight: 1.5 }}>
-            {description}
-          </div>
-        )}
+    <div className="setting-row">
+      <div className="setting-row-content">
+        <div className="setting-row-label">{label}</div>
+        {description && <div className="setting-row-description">{description}</div>}
       </div>
-      <div style={{ flexShrink: 0 }}>{children}</div>
+      <div>{children}</div>
     </div>
   );
 }
@@ -102,33 +87,11 @@ function SettingRow({
 function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
   return (
     <button
+      type="button"
+      className={`toggle-switch${on ? " active" : ""}`}
       onClick={onToggle}
-      style={{
-        width: 40,
-        height: 22,
-        borderRadius: 999,
-        border: "none",
-        background: on ? "#6366f1" : "var(--bento-surface)",
-        boxShadow: on ? "0 0 0 1px rgba(99,102,241,0.5)" : "0 0 0 1px var(--bento-border-hover)",
-        cursor: "pointer",
-        padding: 0,
-        position: "relative",
-        transition: "background 0.18s, box-shadow 0.18s",
-        flexShrink: 0,
-      }}
     >
-      <span
-        style={{
-          position: "absolute",
-          top: 3,
-          left: on ? 20 : 3,
-          width: 16,
-          height: 16,
-          borderRadius: "50%",
-          background: on ? "#fff" : "var(--bento-text-tertiary)",
-          transition: "left 0.18s, background 0.18s",
-        }}
-      />
+      <span className="toggle-switch-thumb" style={{ left: on ? 20 : 3 }} />
     </button>
   );
 }
@@ -152,47 +115,19 @@ function SettingsInput({
       value={value}
       placeholder={placeholder}
       disabled={disabled}
-      onChange={e => onChange?.(e.target.value)}
-      style={{
-        width: 220,
-        fontSize: 12,
-        padding: "7px 11px",
-        borderRadius: 9,
-        border: "0.5px solid var(--bento-border-hover)",
-        background: disabled ? "var(--bento-surface)" : "var(--bento-bg)",
-        color: disabled ? "var(--bento-text-tertiary)" : "var(--bento-text-primary)",
-        outline: "none",
-        fontFamily: "'DM Sans', system-ui, sans-serif",
-        opacity: disabled ? 0.6 : 1,
-        cursor: disabled ? "not-allowed" : "text",
-        transition: "border-color 0.15s, box-shadow 0.15s",
-      }}
-      onFocus={e => {
-        if (!disabled) {
-          e.currentTarget.style.borderColor = "rgba(99,102,241,0.5)";
-          e.currentTarget.style.boxShadow = "0 0 0 3px rgba(99,102,241,0.1)";
-        }
-      }}
-      onBlur={e => {
-        e.currentTarget.style.borderColor = "var(--bento-border-hover)";
-        e.currentTarget.style.boxShadow = "none";
-      }}
+      onChange={(e) => onChange?.(e.target.value)}
+      className="settings-input"
+      style={disabled ? { opacity: 0.6 } : undefined}
     />
   );
 }
 
 function SectionHeader({ title, description }: { title: string; description?: string }) {
   return (
-    <div style={{ marginBottom: 4 }}>
-      <div style={{ fontSize: 14, fontWeight: 600, color: "var(--bento-text-primary)", marginBottom: description ? 4 : 0 }}>
-        {title}
-      </div>
-      {description && (
-        <div style={{ fontSize: 11, color: "var(--bento-text-tertiary)", lineHeight: 1.5, maxWidth: 420 }}>
-          {description}
-        </div>
-      )}
-      <div style={{ height: "0.5px", background: "var(--bento-border)", marginTop: 14 }} />
+    <div className="section-header">
+      <div className="section-header-title">{title}</div>
+      {description && <div className="section-header-description">{description}</div>}
+      <div className="section-header-divider" />
     </div>
   );
 }
@@ -241,17 +176,7 @@ function AccountPanel({ session }: { session: any }) {
       <div style={{ marginTop: 20 }}>
         <button
           onClick={handleSave}
-          style={{
-            fontSize: 12,
-            fontWeight: 600,
-            padding: "8px 20px",
-            background: saved ? "rgba(29,158,117,0.15)" : "#111827",
-            color: saved ? "#1D9E75" : "#fff",
-            border: saved ? "0.5px solid rgba(29,158,117,0.4)" : "none",
-            borderRadius: 9,
-            cursor: "pointer",
-            transition: "all 0.2s",
-          }}
+          className={`setting-button${saved ? " saved" : ""}`}
         >
           {saved ? "Saved" : "Save changes"}
         </button>

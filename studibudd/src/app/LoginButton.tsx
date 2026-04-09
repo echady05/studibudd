@@ -6,74 +6,14 @@ export default function LoginButton() {
 
   if (session) {
     return (
-      <button
-        onClick={() => signOut()}
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 8,
-          padding: "10px 24px",
-          borderRadius: 12,
-          border: "1px solid rgba(44, 62, 80, 0.25)",
-          background: "rgba(109, 155, 202, 0.8)",
-          color: "rgba(25, 25, 26, 0.75)",
-          fontSize: 13,
-          fontWeight: 600,
-          fontFamily: "'DM Sans', system-ui, sans-serif",
-          cursor: "pointer",
-          transition: "all 0.18s ease",
-        }}
-        onMouseEnter={e => {
-          (e.currentTarget as HTMLButtonElement).style.background = "rgba(135, 187, 240, 0.8)";
-          (e.currentTarget as HTMLButtonElement).style.color = "rgba(25, 25, 26, 0.75)";
-        }}
-        onMouseLeave={e => {
-          (e.currentTarget as HTMLButtonElement).style.background = "rgba(109, 155, 202, 0.8)";
-          (e.currentTarget as HTMLButtonElement).style.color = "rgba(25, 25, 26, 0.75)";
-        }}
-      >
+      <button className="loginButton secondary" onClick={() => signOut()}>
         Sign Out
       </button>
     );
   }
 
   return (
-    <button
-      onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 10,
-        padding: "13px 32px",
-        borderRadius: 14,
-        border: "1px solid rgba(50, 89, 121, 0.35)",
-        background: "linear-gradient(160deg, rgb(85, 119, 144) 0%, rgb(50, 89, 121) 100%)",
-        color: "#f5f0e8",
-        fontSize: 15,
-        fontWeight: 700,
-        fontFamily: "'DM Sans', system-ui, sans-serif",
-        cursor: "pointer",
-        boxShadow: "0 4px 18px rgba(50, 89, 121, 0.35)",
-        transition: "all 0.18s ease",
-        letterSpacing: "0.01em",
-      }}
-      onMouseEnter={e => {
-        (e.currentTarget as HTMLButtonElement).style.background =
-          "linear-gradient(160deg, rgb(100, 135, 162) 0%, rgb(65, 104, 138) 100%)";
-        (e.currentTarget as HTMLButtonElement).style.boxShadow =
-          "0 6px 24px rgba(50, 89, 121, 0.50)";
-        (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)";
-      }}
-      onMouseLeave={e => {
-        (e.currentTarget as HTMLButtonElement).style.background =
-          "linear-gradient(160deg, rgb(85, 119, 144) 0%, rgb(50, 89, 121) 100%)";
-        (e.currentTarget as HTMLButtonElement).style.boxShadow =
-          "0 4px 18px rgba(50, 89, 121, 0.35)";
-        (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
-      }}
-    >
+    <button className="loginButton primary" onClick={() => signIn("google", { callbackUrl: "/dashboard" })}>
       <GoogleIcon />
       Sign in with Google
     </button>

@@ -47,118 +47,41 @@ export default function HowItWorks() {
   ];
 
   return (
-    <main style={{
-      minHeight: "100vh",
-      background: "linear-gradient(160deg, #0d0d1a 0%, #111827 60%, #0d1117 100%)",
-      color: "#fff",
-      fontFamily: "'DM Sans', system-ui, sans-serif",
-      boxSizing: "border-box",
-    }}>
-      <style>{`
-        .hiw-grid {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 16px;
-          max-width: 860px;
-          width: 100%;
-        }
-        @media (max-width: 640px) {
-          .hiw-grid { grid-template-columns: 1fr; }
-        }
-      `}</style>
-
-      {/* Nav */}
-      <nav style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        padding: "18px 36px",
-        borderBottom: "1px solid rgba(255,255,255,0.06)",
-      }}>
-        <a href="/" style={{ textDecoration: "none" }}>
+    <main className="page-shell page-dark">
+      <nav className="page-nav">
+        <a href="/">
           <img
             src="/pictures/studibuddlogo/studibuddeggbooks_whitetext.png"
             alt="StudiBudd"
             height={40}
-            style={{ objectFit: "contain", display: "block" }}
+            className="brand-logo"
           />
         </a>
-        <a href="/" style={{
-          fontSize: 13,
-          fontWeight: 600,
-          color: "rgba(255,255,255,0.8)",
-          textDecoration: "none",
-          background: "rgba(255,255,255,0.08)",
-          border: "1px solid rgba(255,255,255,0.15)",
-          borderRadius: 999,
-          padding: "8px 18px",
-          display: "flex",
-          alignItems: "center",
-          gap: 6,
-        }}>
-          ← Home
-        </a>
+        <a href="/">← Home</a>
       </nav>
 
-      {/* Content */}
-      <div style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        padding: "60px 28px 80px",
-        textAlign: "center",
-      }}>
-        <h1 style={{
-          margin: "0 0 14px",
-          fontSize: "clamp(2rem, 5vw, 3.5rem)",
-          fontWeight: 900,
-          letterSpacing: "-0.04em",
-          lineHeight: 1.1,
-        }}>
-          How it works
-        </h1>
-        <p style={{
-          margin: "0 0 56px",
-          color: "rgba(255,255,255,0.4)",
-          fontSize: "clamp(0.95rem, 2vw, 1.1rem)",
-          maxWidth: 440,
-          lineHeight: 1.65,
-        }}>
-          Six steps from signing up to top of the leaderboard.
-        </p>
+      <div className="page-container">
+        <div className="page-content" style={{ textAlign: "center", paddingTop: 62 }}> 
+          <h1 className="page-title">How it works</h1>
+          <p className="page-subtitle">Six steps from signing up to top of the leaderboard.</p>
 
-        <div className="hiw-grid">
-          {steps.map(s => (
-            <div key={s.num} style={{
-              background: "rgba(255,255,255,0.04)",
-              border: `1px solid ${s.accent}33`,
-              borderRadius: 18,
-              padding: "26px 24px",
-              textAlign: "left",
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
-                <span style={{
-                  fontSize: 28,
-                  lineHeight: 1,
-                  filter: `drop-shadow(0 0 10px ${s.accent}66)`,
-                }}>{s.icon}</span>
-                <span style={{
-                  fontSize: 11,
-                  fontWeight: 800,
-                  color: s.accent,
-                  letterSpacing: "0.12em",
-                }}>{s.num}</span>
+          <div className="hiw-grid">
+            {steps.map((step) => (
+              <div key={step.num} className="hiw-card" style={{ borderColor: `${step.accent}33` }}>
+                <div className="hiw-step-head">
+                  <span className="hiw-step-icon" style={{ color: step.accent }}>{step.icon}</span>
+                  <span className="hiw-step-badge" style={{ color: step.accent }}>{step.num}</span>
+                </div>
+                <div className="hiw-step-title">{step.title}</div>
+                <div className="hiw-step-body">{step.body}</div>
               </div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: "#fff", marginBottom: 8 }}>{s.title}</div>
-              <div style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.65 }}>{s.body}</div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
 
-        {/* CTA */}
-        <div style={{ marginTop: 56, display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
-          <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.6)" }}>Ready? Sign in with Google to get started.</p>
-          <LoginButton />
+          <div className="cta-group">
+            <p className="page-subtitle" style={{ marginBottom: 0 }}>Ready? Sign in with Google to get started.</p>
+            <LoginButton />
+          </div>
         </div>
       </div>
     </main>
