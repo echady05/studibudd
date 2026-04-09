@@ -55,7 +55,7 @@ const DOW = ["S","M","T","W","T","F","S"];
 const EVENT_COLORS = ["#BA7517","#1D9E75","#378ADD","#993556","#533AB7","#993C1D"];
 const FOCUS_PAGES = 3;
 const CREATURE_FOLDERS = ["beige", "blue", "green", "grey", "pink", "red"];
-const STAGE_FILES = ["egg", "1", "2", "3"];
+const STAGE_FILES = ["0", "1", "2", "3"];
 const MAX_STAGE = 3;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -652,7 +652,7 @@ setStep("customize");
                               style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "8px 4px", borderRadius: 10, background: selected ? "rgba(99,102,241,0.1)" : "var(--bento-surface)", border: `1px solid ${selected ? "rgba(99,102,241,0.5)" : "var(--bento-border)"}`, cursor: "pointer", transition: "all 0.15s" }}
                             >
                               <img
-                                src={`/pictures/buddies/${color}/egg.png`}
+                                src={`/buddies/${color}/0/0.png`}
                                 alt={`${color} egg`}
                                 style={{ width: 40, height: 40, objectFit: "contain", imageRendering: "pixelated" }}
                                 onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
@@ -962,8 +962,7 @@ const savedCreatures: Record<number, CreatureState> | null = rawCreatures
   function getImageSrc(originalIdx: number): string {
     const folder = CREATURE_FOLDERS[originalIdx % CREATURE_FOLDERS.length];
     const stage = creatures[originalIdx]?.stage ?? 0;
-    const file = STAGE_FILES[stage];
-    return `pictures/buddies/${folder}/${file}.png`;
+    return `/buddies/${folder}/${stage}/${stage}.png`;
   }
 
   // ── Build slot data ───────────────────────────────────────────────────────
