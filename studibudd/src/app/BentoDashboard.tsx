@@ -857,6 +857,9 @@ function FocusBoard({ refreshKey }: { refreshKey: number }) {
   const [creatures, setCreatures] = useState<Record<number, CreatureState>>({});
   // Flash effect type per slot
   const [flash, setFlash] = useState<Record<number, "evolve" | "devolve" | "xp" | null>>({});
+  const [showCreatureModal, setShowCreatureModal] = useState(false);
+  const [selectedCreatureSlot, setSelectedCreatureSlot] = useState<number | null>(null);
+  const [creatureDescription, setCreatureDescription] = useState("");
 
   // Debounced save to DB whenever order or creatures change
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -964,6 +967,44 @@ const savedCreatures: Record<number, CreatureState> | null = rawCreatures
     const stage = creatures[originalIdx]?.stage ?? 0;
     return `/buddies/${folder}/${stage}/${stage}.png`;
   }
+
+  async function loadCreatureDescription(folder: string, stage: number) {
+    try {
+      const response = await fetch(`/buddies/${folder}/${stage}/description.txt`);
+      const text = response.ok ? await response.text() : "No description available.";
+      setCreatureDescription(text || "No description available.");
+    } catch {
+      setCreatureDescription("No description available.");
+    }
+  }
+
+  function openCreatureModal(e: React.MouseEvent, slotIdx: number) {
+    e.stopPropagation();
+    setSelectedCreatureSlot(slotIdx);
+    setShowCreatureModal(true);
+    const folder = CREATURE_FOLDERS[slotIdx % CREATURE_FOLDERS.length];
+    const stage = creatures[slotIdx]?.stage ?? 0;
+    loadCreatureDescription(folder, stage);
+  }
+
+  function closeCreatureModal() {
+    setShowCreatureModal(false);
+    setSelectedCreatureSlot(null);
+  }
+
+  useEffect(() => {
+    if (selectedCreatureSlot === null) return;
+    const folder = CREATURE_FOLDERS[selectedCreatureSlot % CREATURE_FOLDERS.length];
+    const stage = creatures[selectedCreatureSlot]?.stage ?? 0;
+    loadCreatureDescription(folder, stage);
+  }, [selectedCreatureSlot, creatures]);
+
+  const selectedCreatureData = selectedCreatureSlot !== null ? creatures[selectedCreatureSlot] ?? { stage: 0, xp: 0 } : null;
+  const selectedCreatureFolder = selectedCreatureSlot !== null ? CREATURE_FOLDERS[selectedCreatureSlot % CREATURE_FOLDERS.length] : "";
+  const selectedCreatureStage = selectedCreatureData?.stage ?? 0;
+  const selectedCreatureName = selectedCreatureFolder;
+  const selectedCreatureImage = selectedCreatureSlot !== null ? `/buddies/${selectedCreatureFolder}/${selectedCreatureStage}/${selectedCreatureStage}.png` : "";
+  const selectedCreatureStageLabel = selectedCreatureStage === 0 ? "Egg" : `Form ${selectedCreatureStage}`;
 
   // ── Build slot data ───────────────────────────────────────────────────────
 
@@ -1233,52 +1274,33 @@ const savedCreatures: Record<number, CreatureState> | null = rawCreatures
                         <XpBar xp={creature.xp} max={XP_PER_LEVEL} />
                       </div>
 
-                      {/* Control buttons */}
-                      <div style={{ display: "flex", gap: 5, padding: "0 14px 10px", background: "var(--bento-bg)" }}>
+                      {/* Creature name button */}
+                      <div style={{ display: "flex", justifyContent: "center", padding: "0 14px 10px", background: "var(--bento-bg)" }}>
                         <button
-                          onMouseDown={e => e.stopPropagation()}
-                          onClick={e => evolveCreature(e, oi)}
-                          disabled={isMaxStage}
+                          onClick={e => openCreatureModal(e, oi)}
                           style={{
-                            flex: 1, fontSize: 10, fontWeight: 600, padding: "6px 0",
-                            background: isMaxStage ? "var(--bento-surface)" : "#111827",
-                            color: isMaxStage ? "var(--bento-text-tertiary)" : "#fff",
-                            border: "none", borderRadius: 7,
-                            cursor: isMaxStage ? "not-allowed" : "pointer",
-                            opacity: isMaxStage ? 0.45 : 1,
-                            transition: "opacity 0.15s",
-                          }}
-                        >▲ Evolve</button>
-                        <button
-                          onMouseDown={e => e.stopPropagation()}
-                          onClick={e => devolveCreature(e, oi)}
-                          disabled={isMinStage}
-                          style={{
-                            flex: 1, fontSize: 10, fontWeight: 600, padding: "6px 0",
-                            background: "var(--bento-surface)",
-                            color: isMinStage ? "var(--bento-text-tertiary)" : "var(--bento-text-secondary)",
-                            border: "0.5px solid var(--bento-border)",
-                            borderRadius: 7,
-                            cursor: isMinStage ? "not-allowed" : "pointer",
-                            opacity: isMinStage ? 0.45 : 1,
-                            transition: "opacity 0.15s",
-                          }}
-                        >▼ Devolve</button>
-                        <button
-                          onMouseDown={e => e.stopPropagation()}
-                          onClick={e => addXp(e, oi, 25)}
-                          style={{
-                            flex: 1, fontSize: 10, fontWeight: 600, padding: "6px 0",
-                            background: "rgba(29,158,117,0.1)",
-                            color: "#1D9E75",
-                            border: "0.5px solid rgba(29,158,117,0.3)",
-                            borderRadius: 7,
+                            width: "100%",
+                            borderRadius: 999,
+                            border: "1px solid rgba(255,255,255,0.12)",
+                            background: "rgba(255,255,255,0.04)",
+                            color: "var(--bento-text-primary)",
+                            fontSize: 12,
+                            fontWeight: 700,
+                            padding: "10px 0",
                             cursor: "pointer",
-                            transition: "background 0.15s",
+                            transition: "background 0.15s, transform 0.15s",
                           }}
-                          onMouseEnter={e => (e.currentTarget.style.background = "rgba(29,158,117,0.2)")}
-                          onMouseLeave={e => (e.currentTarget.style.background = "rgba(29,158,117,0.1)")}
-                        >+XP</button>
+                          onMouseEnter={e => {
+                            e.currentTarget.style.background = "rgba(255,255,255,0.08)";
+                            e.currentTarget.style.transform = "translateY(-1px)";
+                          }}
+                          onMouseLeave={e => {
+                            e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+                            e.currentTarget.style.transform = "translateY(0px)";
+                          }}
+                        >
+                          {slot.folder}
+                        </button>
                       </div>
 
                       {/* Coming Soon / assignments */}
@@ -1309,6 +1331,133 @@ const savedCreatures: Record<number, CreatureState> | null = rawCreatures
           </div>
         </div>
       </div>
+
+      {showCreatureModal && selectedCreatureSlot !== null && (
+        <div
+          onClick={closeCreatureModal}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.65)",
+            backdropFilter: "blur(10px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 2000,
+            padding: 20,
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              width: "100%",
+              maxWidth: 580,
+              maxHeight: "90vh",
+              overflowY: "auto",
+              background: "var(--bento-bg)",
+              border: "1px solid var(--bento-border)",
+              borderRadius: 24,
+              padding: 28,
+              position: "relative",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.35)",
+            }}
+          >
+            <button
+              onClick={closeCreatureModal}
+              style={{
+                position: "absolute",
+                top: 16,
+                right: 16,
+                background: "none",
+                border: "none",
+                color: "var(--bento-text-secondary)",
+                fontSize: 24,
+                cursor: "pointer",
+                padding: 4,
+              }}
+            >
+              ×
+            </button>
+            <div style={{ textAlign: "center", marginBottom: 18 }}>
+              <div style={{ fontSize: 24, fontWeight: 700, color: "var(--bento-text-primary)", textTransform: "capitalize" }}>
+                {selectedCreatureName}
+              </div>
+            </div>
+            <div style={{ textAlign: "center", marginBottom: 18 }}>
+              <img
+                src={selectedCreatureImage}
+                alt={selectedCreatureStageLabel}
+                style={{ width: 220, height: 220, objectFit: "contain", margin: "0 auto" }}
+              />
+            </div>
+            <div style={{ padding: "0 24px 14px" }}>
+              <XpBar xp={selectedCreatureData?.xp ?? 0} max={XP_PER_LEVEL} />
+            </div>
+            <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap", marginBottom: 22 }}>
+              <button
+                onClick={e => evolveCreature(e, selectedCreatureSlot)}
+                disabled={selectedCreatureStage >= MAX_STAGE}
+                style={{
+                  minWidth: 100,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  padding: "10px 14px",
+                  background: selectedCreatureStage >= MAX_STAGE ? "var(--bento-surface)" : "#111827",
+                  color: selectedCreatureStage >= MAX_STAGE ? "var(--bento-text-tertiary)" : "#fff",
+                  border: "none",
+                  borderRadius: 10,
+                  cursor: selectedCreatureStage >= MAX_STAGE ? "not-allowed" : "pointer",
+                  opacity: selectedCreatureStage >= MAX_STAGE ? 0.45 : 1,
+                }}
+              >
+                ▲ Evolve
+              </button>
+              <button
+                onClick={e => devolveCreature(e, selectedCreatureSlot)}
+                disabled={selectedCreatureStage <= 0}
+                style={{
+                  minWidth: 100,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  padding: "10px 14px",
+                  background: "var(--bento-surface)",
+                  color: selectedCreatureStage <= 0 ? "var(--bento-text-tertiary)" : "var(--bento-text-secondary)",
+                  border: "0.5px solid var(--bento-border)",
+                  borderRadius: 10,
+                  cursor: selectedCreatureStage <= 0 ? "not-allowed" : "pointer",
+                  opacity: selectedCreatureStage <= 0 ? 0.45 : 1,
+                }}
+              >
+                ▼ Devolve
+              </button>
+              <button
+                onClick={e => addXp(e, selectedCreatureSlot, 25)}
+                style={{
+                  minWidth: 100,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  padding: "10px 14px",
+                  background: "rgba(29,158,117,0.1)",
+                  color: "#1D9E75",
+                  border: "0.5px solid rgba(29,158,117,0.3)",
+                  borderRadius: 10,
+                  cursor: "pointer",
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = "rgba(29,158,117,0.2)")}
+                onMouseLeave={e => (e.currentTarget.style.background = "rgba(29,158,117,0.1)")}
+              >
+                +XP
+              </button>
+            </div>
+            <div style={{ borderTop: "0.5px solid var(--bento-border)", paddingTop: 18 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "var(--bento-text-secondary)", marginBottom: 10 }}>Description</div>
+              <p style={{ fontSize: 13, lineHeight: 1.7, color: "var(--bento-text-tertiary)", whiteSpace: "pre-wrap", margin: 0 }}>
+                {creatureDescription || "No description available."}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
