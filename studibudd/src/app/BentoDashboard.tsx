@@ -1469,6 +1469,10 @@ export default function BentoDashboard({ session }: BentoDashboardProps) {
   const [showGame, setShowGame] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [contactMessage, setContactMessage] = useState("");
+  const [contactLoading, setContactLoading] = useState(false);
+  const [contactStatus, setContactStatus] = useState("");
   const year = new Date().getFullYear();
   const initials = getInitials(session.user?.name);
 
@@ -1652,7 +1656,22 @@ export default function BentoDashboard({ session }: BentoDashboardProps) {
                     Want StudiBudd for your school? Email us and we'll build new subjects with you.
                   </p>
                 </div>
-                <a href="mailto:studibuddcontact@gmail.com" style={{ display: "inline-block", background: "#111827", color: "#fff", fontSize: 12, fontWeight: 500, padding: "8px 18px", borderRadius: 10, textDecoration: "none" }}>Email StudiBudd</a>
+                <a
+                  onClick={() => setShowContactModal(true)}
+                  style={{
+                    display: "inline-block",
+                    background: "#111827",
+                    color: "#fff",
+                    fontSize: 12,
+                    fontWeight: 500,
+                    padding: "8px 18px",
+                    borderRadius: 10,
+                    textDecoration: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  Email StudiBudd
+                </a>
               </div>
             </div>
 
@@ -1664,6 +1683,175 @@ export default function BentoDashboard({ session }: BentoDashboardProps) {
           </div>
         </div>
       </div>
+
+      {/* Contact Modal */}
+      {showContactModal && (
+        <div
+          onClick={() => setShowContactModal(false)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            backdropFilter: "blur(4px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              position: "relative",
+              backgroundColor: "var(--bento-surface)",
+              borderRadius: 16,
+              border: "0.5px solid var(--bento-border)",
+              padding: "28px 32px",
+              maxWidth: 480,
+              width: "90%",
+              maxHeight: "80vh",
+              overflow: "auto",
+            }}
+          >
+            <button
+              onClick={() => setShowContactModal(false)}
+              style={{
+                position: "absolute",
+                top: 16,
+                right: 16,
+                background: "none",
+                border: "none",
+                fontSize: 24,
+                cursor: "pointer",
+                color: "var(--bento-text-secondary)",
+                padding: 0,
+                width: 32,
+                height: 32,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              ✕
+            </button>
+
+            <h2 style={{ fontSize: 20, fontWeight: 600, color: "var(--bento-text-primary)", margin: "0 0 12px 0" }}>
+              Contact StudiBudd
+            </h2>
+            <p style={{ fontSize: 13, color: "var(--bento-text-secondary)", margin: "0 0 20px 0" }}>
+              Let us know what you'd like StudiBudd to help with. We read every message!
+            </p>
+
+            <textarea
+              value={contactMessage}
+              onChange={(e) => setContactMessage(e.target.value)}
+              placeholder="Type your message here..."
+              disabled={contactLoading}
+              style={{
+                width: "100%",
+                minHeight: 120,
+                padding: 12,
+                borderRadius: 8,
+                border: "0.5px solid var(--bento-border)",
+                backgroundColor: "var(--bento-bg)",
+                color: "var(--bento-text-primary)",
+                fontSize: 13,
+                fontFamily: "inherit",
+                resize: "none",
+                marginBottom: 16,
+                boxSizing: "border-box",
+              }}
+            />
+
+            {contactStatus && (
+              <p
+                style={{
+                  fontSize: 12,
+                  color: contactStatus.includes("success") ? "#10b981" : "#ef4444",
+                  marginBottom: 16,
+                  margin: "0 0 16px 0",
+                }}
+              >
+                {contactStatus}
+              </p>
+            )}
+
+            <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
+              <button
+                onClick={() => {
+                  setShowContactModal(false);
+                  setContactMessage("");
+                  setContactStatus("");
+                }}
+                disabled={contactLoading}
+                style={{
+                  padding: "8px 20px",
+                  borderRadius: 8,
+                  border: "0.5px solid var(--bento-border)",
+                  background: "transparent",
+                  color: "var(--bento-text-secondary)",
+                  fontSize: 12,
+                  fontWeight: 500,
+                  cursor: contactLoading ? "not-allowed" : "pointer",
+                  opacity: contactLoading ? 0.5 : 1,
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  if (!contactMessage.trim() || !session?.user?.email) return;
+
+                  setContactLoading(true);
+                  try {
+                    const response = await fetch("/api/contact", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        userId: session.user.email,
+                        message: contactMessage,
+                      }),
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                      setContactStatus("Message sent successfully! We'll get back to you soon.");
+                      setContactMessage("");
+                      setTimeout(() => {
+                        setShowContactModal(false);
+                        setContactStatus("");
+                      }, 2000);
+                    } else if (response.status === 429) {
+                      setContactStatus("You've already sent a message today. Please try again tomorrow.");
+                    } else {
+                      setContactStatus(data.error || "Failed to send message. Please try again.");
+                    }
+                  } catch (error) {
+                    setContactStatus("Failed to send message. Please try again.");
+                  } finally {
+                    setContactLoading(false);
+                  }
+                }}
+                disabled={!contactMessage.trim() || contactLoading}
+                style={{
+                  padding: "8px 20px",
+                  borderRadius: 8,
+                  border: "none",
+                  background: "#111827",
+                  color: "#fff",
+                  fontSize: 12,
+                  fontWeight: 500,
+                  cursor: !contactMessage.trim() || contactLoading ? "not-allowed" : "pointer",
+                  opacity: !contactMessage.trim() || contactLoading ? 0.5 : 1,
+                }}
+              >
+                {contactLoading ? "Sending..." : "Send"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
