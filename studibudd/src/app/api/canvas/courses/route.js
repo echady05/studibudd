@@ -24,17 +24,45 @@ export async function GET() {
     }
     const raw = await res.json();
     const allowedIds = Array.isArray(user.selectedCourseIds) && user.selectedCourseIds.length > 0
-      ? new Set(user.selectedCourseIds.map(Number))
+      ? new Set(user.selectedCourseIds.map(String))
       : null;
 
-    const courses = Array.isArray(raw)
+    const canvasCourses = Array.isArray(raw)
       ? raw
           .filter((c) => c.name && c.workflow_state !== "deleted")
-          .filter((c) => !allowedIds || allowedIds.has(Number(c.id)))
+          .filter((c) => !allowedIds || allowedIds.has(String(c.id)))
           .map((c) => ({ id: c.id, name: c.name, code: c.course_code }))
       : [];
+    
+    // Add manual courses that are selected
+    const manualCourses = (user.manualCourses || [])
+      .map((course, index) => {
+        const manualId = `manual_${index}`;
+        if (!allowedIds || allowedIds.has(manualId)) {
+          return { id: manualId, name: course.name, code: course.code };
+        }
+        return null;
+      })
+      .filter(Boolean);
+    
+    const courses = [...canvasCourses, ...manualCourses];
     return NextResponse.json({ courses, connected: true });
   } catch {
-    return NextResponse.json({ courses: null, connected: false, error: "Could not reach Canvas" });
+    // Return manual courses only if Canvas fails
+    const allowedIds = Array.isArray(user.selectedCourseIds) && user.selectedCourseIds.length > 0
+      ? new Set(user.selectedCourseIds.map(String))
+      : null;
+    
+    const manualCourses = (user.manualCourses || [])
+      .map((course, index) => {
+        const manualId = `manual_${index}`;
+        if (!allowedIds || allowedIds.has(manualId)) {
+          return { id: manualId, name: course.name, code: course.code };
+        }
+        return null;
+      })
+      .filter(Boolean);
+    
+    return NextResponse.json({ courses: manualCourses, connected: false, error: "Could not reach Canvas" });
   }
 }

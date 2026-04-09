@@ -21,6 +21,7 @@ function defaultUserData(email) {
     subjectProgress: {},
     name: null,
     avatar_url: null,
+    manualCourses: [],
   };
 }
 
@@ -52,6 +53,7 @@ export async function getUserData(email) {
     avatar_url: data.avatar_url ?? null,
     selectedCourseIds: data.selected_course_ids ?? null,
     courseEggs: data.course_eggs ?? {},
+    manualCourses: data.manual_courses ?? [],
   };
 }
 
@@ -96,6 +98,7 @@ export async function updateUserData(email, mutator) {
     updated_at: new Date(),
     selected_course_ids: user.selectedCourseIds ?? null,
     course_eggs: user.courseEggs ?? {},
+    manual_courses: user.manualCourses ?? [],
   };
 
   // Save name/avatar if present on the user object

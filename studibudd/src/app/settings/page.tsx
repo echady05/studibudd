@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import LoginButton from "../LoginButton";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Tab = "account" | "appearance" | "canvas" | "notifications" | "danger";
+type Tab = "account" | "appearance" | "canvas" | "courses" | "notifications" | "danger";
 
 interface TabItem {
   id: Tab;
@@ -39,6 +39,17 @@ function IconCanvas() {
     <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
       <rect x="2" y="2" width="11" height="11" rx="2" stroke="currentColor" strokeWidth="1.3" />
       <path d="M5 7.5h5M7.5 5v5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconCourses() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+      <path d="M2 4.5h11M2 7.5h11M2 10.5h11" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+      <circle cx="12" cy="4.5" r="1.5" stroke="currentColor" strokeWidth="1.3" />
+      <circle cx="12" cy="7.5" r="1.5" stroke="currentColor" strokeWidth="1.3" />
+      <circle cx="12" cy="10.5" r="1.5" stroke="currentColor" strokeWidth="1.3" />
     </svg>
   );
 }
@@ -310,6 +321,301 @@ function CanvasPanel() {
   );
 }
 
+function CoursesPanel() {
+  const [courses, setCourses] = useState<{ id: number | string; name: string; code: string }[]>([]);
+  const [selected, setSelected] = useState<(number | string)[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newCourseName, setNewCourseName] = useState("");
+  const [newCourseCode, setNewCourseCode] = useState("");
+
+  useEffect(() => {
+    fetchCourses();
+  }, []);
+
+  const fetchCourses = async () => {
+    try {
+      const res = await fetch("/api/canvas/courses/manage");
+      if (res.ok) {
+        const data = await res.json();
+        setCourses(data.courses || []);
+        setSelected(data.selected || []);
+      }
+    } catch (error) {
+      console.error("Failed to fetch courses:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateSelection = async (newSelected: (number | string)[]) => {
+    setSaving(true);
+    try {
+      const res = await fetch("/api/canvas/courses/manage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ selectedCourseIds: newSelected }),
+      });
+      if (res.ok) {
+        setSelected(newSelected);
+      } else {
+        alert("Failed to update course selection");
+      }
+    } catch (error) {
+      console.error("Failed to update courses:", error);
+      alert("Failed to update course selection");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const addManualCourse = async () => {
+    if (!newCourseName.trim()) {
+      alert("Course name is required");
+      return;
+    }
+    
+    setSaving(true);
+    try {
+      const res = await fetch("/api/canvas/courses/manage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          manualCourse: { name: newCourseName.trim(), code: newCourseCode.trim() }
+        }),
+      });
+      if (res.ok) {
+        setNewCourseName("");
+        setNewCourseCode("");
+        setShowAddForm(false);
+        await fetchCourses(); // Refresh the list
+      } else {
+        alert("Failed to add course");
+      }
+    } catch (error) {
+      console.error("Failed to add course:", error);
+      alert("Failed to add course");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const resetProgress = async (courseId: number | string) => {
+    if (!confirm("Are you sure you want to reset progress for this course? This cannot be undone.")) return;
+    
+    // For manual courses, we need to handle the subject differently
+    const subject = typeof courseId === 'string' && courseId.startsWith('manual_') 
+      ? `manual_${courseId}` 
+      : `canvas_${courseId}`;
+      
+    try {
+      const res = await fetch("/api/progress/reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ courseId: typeof courseId === 'string' ? courseId : courseId }),
+      });
+      if (res.ok) {
+        alert("Course progress reset successfully");
+      } else {
+        alert("Failed to reset progress");
+      }
+    } catch (error) {
+      console.error("Failed to reset progress:", error);
+      alert("Failed to reset progress");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div>
+        <SectionHeader title="Courses" description="Manage which courses appear on your dashboard." />
+        <div style={{ textAlign: "center", padding: "40px", color: "var(--bento-text-tertiary)" }}>
+          Loading courses...
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <SectionHeader title="Courses" description="Manage which courses appear on your dashboard and add manual courses." />
+
+      {/* Add Manual Course Button */}
+      <div style={{ marginBottom: 24 }}>
+        <button
+          onClick={() => setShowAddForm(!showAddForm)}
+          style={{
+            fontSize: 12,
+            fontWeight: 500,
+            padding: "8px 16px",
+            background: "rgba(99,102,241,0.12)",
+            color: "#a5b4fc",
+            border: "0.5px solid rgba(99,102,241,0.5)",
+            borderRadius: 8,
+            cursor: "pointer",
+          }}
+        >
+          {showAddForm ? "Cancel" : "+ Add Manual Course"}
+        </button>
+      </div>
+
+      {/* Add Course Form */}
+      {showAddForm && (
+        <div style={{
+          padding: "20px",
+          border: "0.5px solid var(--bento-border)",
+          borderRadius: 12,
+          background: "var(--bento-surface)",
+          marginBottom: 24,
+        }}>
+          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 16, color: "var(--bento-text-primary)" }}>
+            Add Manual Course
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div>
+              <label style={{ fontSize: 12, color: "var(--bento-text-secondary)", marginBottom: 4, display: "block" }}>
+                Course Name *
+              </label>
+              <SettingsInput
+                value={newCourseName}
+                onChange={setNewCourseName}
+                placeholder="e.g., Introduction to Computer Science"
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: 12, color: "var(--bento-text-secondary)", marginBottom: 4, display: "block" }}>
+                Course Code (optional)
+              </label>
+              <SettingsInput
+                value={newCourseCode}
+                onChange={setNewCourseCode}
+                placeholder="e.g., CS101"
+              />
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button
+                onClick={addManualCourse}
+                disabled={saving || !newCourseName.trim()}
+                style={{
+                  fontSize: 12,
+                  fontWeight: 500,
+                  padding: "8px 16px",
+                  background: saving || !newCourseName.trim() ? "var(--bento-surface)" : "rgba(99,102,241,0.12)",
+                  color: saving || !newCourseName.trim() ? "var(--bento-text-tertiary)" : "#a5b4fc",
+                  border: `0.5px solid ${saving || !newCourseName.trim() ? "var(--bento-border-hover)" : "rgba(99,102,241,0.5)"}`,
+                  borderRadius: 8,
+                  cursor: saving || !newCourseName.trim() ? "not-allowed" : "pointer",
+                }}
+              >
+                {saving ? "Adding..." : "Add Course"}
+              </button>
+              <button
+                onClick={() => {
+                  setShowAddForm(false);
+                  setNewCourseName("");
+                  setNewCourseCode("");
+                }}
+                style={{
+                  fontSize: 12,
+                  fontWeight: 500,
+                  padding: "8px 16px",
+                  background: "var(--bento-surface)",
+                  color: "var(--bento-text-secondary)",
+                  border: "0.5px solid var(--bento-border-hover)",
+                  borderRadius: 8,
+                  cursor: "pointer",
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Course List */}
+      {courses.length === 0 && !showAddForm ? (
+        <div style={{ textAlign: "center", padding: "40px", color: "var(--bento-text-tertiary)" }}>
+          No courses found. Add a manual course above or connect Canvas.
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {courses.map((course) => {
+            const isSelected = selected.includes(course.id);
+            const isManual = typeof course.id === 'string' && course.id.startsWith('manual_');
+            return (
+              <div key={course.id} style={{
+                padding: "16px",
+                border: "0.5px solid var(--bento-border)",
+                borderRadius: 12,
+                background: "var(--bento-surface)",
+              }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: "var(--bento-text-primary)" }}>
+                      {course.name}
+                      {isManual && (
+                        <span style={{ fontSize: 10, color: "var(--bento-text-tertiary)", marginLeft: 8, background: "rgba(99,102,241,0.1)", padding: "2px 6px", borderRadius: 4 }}>
+                          Manual
+                        </span>
+                      )}
+                    </div>
+                    {course.code && (
+                      <div style={{ fontSize: 12, color: "var(--bento-text-tertiary)" }}>
+                        {course.code}
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <button
+                      onClick={() => {
+                        const newSelected = isSelected
+                          ? selected.filter(id => id !== course.id)
+                          : [...selected, course.id];
+                        updateSelection(newSelected);
+                      }}
+                      disabled={saving}
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 500,
+                        padding: "6px 12px",
+                        background: isSelected ? "rgba(99,102,241,0.12)" : "var(--bento-surface)",
+                        color: isSelected ? "#a5b4fc" : "var(--bento-text-secondary)",
+                        border: `0.5px solid ${isSelected ? "rgba(99,102,241,0.5)" : "var(--bento-border-hover)"}`,
+                        borderRadius: 8,
+                        cursor: saving ? "not-allowed" : "pointer",
+                        opacity: saving ? 0.6 : 1,
+                      }}
+                    >
+                      {isSelected ? "Remove from Dashboard" : "Add to Dashboard"}
+                    </button>
+                    <button
+                      onClick={() => resetProgress(course.id)}
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 500,
+                        padding: "6px 12px",
+                        background: "rgba(220,38,38,0.07)",
+                        color: "#f87171",
+                        border: "0.5px solid rgba(220,38,38,0.25)",
+                        borderRadius: 8,
+                        cursor: "pointer",
+                      }}
+                    >
+                      Reset Progress
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function NotificationsPanel() {
   const [assignmentReminders, setAssignmentReminders] = useState(true);
   const [evolutionAlerts, setEvolutionAlerts] = useState(true);
@@ -440,6 +746,7 @@ export default function SettingsPage() {
     { id: "account",       label: "Account",       icon: <IconAccount /> },
     { id: "appearance",    label: "Appearance",    icon: <IconAppearance /> },
     { id: "canvas",        label: "Canvas",        icon: <IconCanvas /> },
+    { id: "courses",       label: "Courses",       icon: <IconCourses /> },
     { id: "notifications", label: "Notifications", icon: <IconNotifications /> },
     { id: "danger",        label: "Danger zone",   icon: <IconDanger /> },
   ];
@@ -590,6 +897,7 @@ export default function SettingsPage() {
             {activeTab === "account"       && <AccountPanel session={session} />}
             {activeTab === "appearance"    && <AppearancePanel />}
             {activeTab === "canvas"        && <CanvasPanel />}
+            {activeTab === "courses"       && <CoursesPanel />}
             {activeTab === "notifications" && <NotificationsPanel />}
             {activeTab === "danger"        && <DangerPanel />}
           </div>

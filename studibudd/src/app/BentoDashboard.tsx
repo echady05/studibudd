@@ -1055,7 +1055,30 @@ const savedCreatures: Record<number, CreatureState> | null = rawCreatures
     return (
       <div className="bento-card" style={{ padding: "32px 24px", textAlign: "center" }}>
         <div style={{ fontSize: 13, fontWeight: 500, color: "var(--bento-text-primary)", marginBottom: 6 }}>Courses</div>
-        <div style={{ fontSize: 12, color: "var(--bento-text-tertiary)" }}>Connect Canvas to see your courses here</div>
+        <div style={{ fontSize: 12, color: "var(--bento-text-tertiary)", marginBottom: 20 }}>
+          No courses loaded yet
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "center" }}>
+          <a
+            href="/settings"
+            style={{
+              fontSize: 11,
+              fontWeight: 500,
+              padding: "8px 16px",
+              background: "rgba(99,102,241,0.12)",
+              color: "#a5b4fc",
+              border: "0.5px solid rgba(99,102,241,0.5)",
+              borderRadius: 8,
+              textDecoration: "none",
+              display: "inline-block",
+            }}
+          >
+            Add Manual Course
+          </a>
+          <div style={{ fontSize: 10, color: "var(--bento-text-tertiary)" }}>
+            Or connect Canvas in Settings
+          </div>
+        </div>
       </div>
     );
   }

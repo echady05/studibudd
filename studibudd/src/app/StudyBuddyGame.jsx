@@ -114,11 +114,11 @@ export default function StudyBuddyGame() {
   const subjects = useMemo(() => {
     if (canvasCourses && canvasCourses.length > 0) {
       return canvasCourses.map((c) => ({
-        key: `canvas_${c.id}`,
+        key: typeof c.id === 'string' && c.id.startsWith('manual_') ? c.id : `canvas_${c.id}`,
         name: c.name,
-        courseCode: c.courseCode,
-        eggLabel: c.courseCode ? `${c.courseCode} Egg` : `${c.name} Egg`,
-        ...courseColor(c.id),
+        courseCode: c.code,
+        eggLabel: c.code ? `${c.code} Egg` : `${c.name} Egg`,
+        ...courseColor(typeof c.id === 'string' && c.id.startsWith('manual_') ? c.id : c.id),
       }));
     }
     return HARDCODED_SUBJECTS;
@@ -146,9 +146,11 @@ export default function StudyBuddyGame() {
       const res = await fetch("/api/canvas/courses");
       if (!res.ok) return;
       const data = await res.json();
-      if (data.connected && Array.isArray(data.courses) && data.courses.length > 0) {
+      if (Array.isArray(data.courses) && data.courses.length > 0) {
         setCanvasCourses(data.courses);
-        const firstKey = `canvas_${data.courses[0].id}`;
+        const firstKey = data.courses[0].id.toString().startsWith('manual_') 
+          ? data.courses[0].id.toString() 
+          : `canvas_${data.courses[0].id}`;
         setSubject(firstKey);
         setMission(buildQuestion(firstKey));
         setMissionKey((k) => k + 1);
