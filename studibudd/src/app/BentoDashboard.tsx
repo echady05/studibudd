@@ -970,7 +970,7 @@ const savedCreatures: Record<number, CreatureState> | null = rawCreatures
 
   async function loadCreatureDescription(folder: string, stage: number) {
     try {
-      const response = await fetch(`/buddies/${folder}/${stage}/description.txt`);
+      const response = await fetch(`/buddies/${folder}/${stage}/description.txt?t=${Date.now()}`);
       const text = response.ok ? await response.text() : "No description available.";
       setCreatureDescription(text || "No description available.");
     } catch {
@@ -982,6 +982,7 @@ const savedCreatures: Record<number, CreatureState> | null = rawCreatures
     e.stopPropagation();
     setSelectedCreatureSlot(slotIdx);
     setShowCreatureModal(true);
+    setCreatureDescription("Loading...");
     const folder = CREATURE_FOLDERS[slotIdx % CREATURE_FOLDERS.length];
     const stage = creatures[slotIdx]?.stage ?? 0;
     loadCreatureDescription(folder, stage);
