@@ -55,8 +55,8 @@ const DOW = ["S","M","T","W","T","F","S"];
 const EVENT_COLORS = ["#BA7517","#1D9E75","#378ADD","#993556","#533AB7","#993C1D"];
 const FOCUS_PAGES = 3;
 const CREATURE_FOLDERS = ["beige", "blue", "green", "grey", "pink", "red"];
-const STAGE_FILES = ["egg", "1", "2"];
-const MAX_STAGE = 2;
+const STAGE_FILES = ["egg", "1", "2", "3"];
+const MAX_STAGE = 3;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
