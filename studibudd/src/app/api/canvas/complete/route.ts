@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
@@ -6,13 +6,13 @@ import { updateUserData } from "@/lib/db";
 import { validateCsrfToken } from "@/lib/csrf";
 
 const CanvasCompleteSchema = z.object({
-  assignmentId: z.union([z.string(), z.number()]).nonempty(),
+  assignmentId: z.union([z.string(), z.number()]),
   urgent: z.boolean().optional().default(false),
 });
 
 // Called when a user marks a Canvas assignment as done
 // Awards XP based on urgency
-export async function POST(req) {
+export async function POST(req: NextRequest) {
   if (!validateCsrfToken(req)) {
     return NextResponse.json({ error: "Invalid CSRF token" }, { status: 403 });
   }
@@ -36,7 +36,7 @@ export async function POST(req) {
   const xpGain = urgent ? 50 : 30;
 
   let result;
-  await updateUserData(session.user.email, (user) => {
+  await updateUserData(session.user.email, (user: any) => {
     const p = user.progress;
     p.xp = Math.min((p.xp ?? 0) + xpGain, 999999);
     p.streak = (p.streak ?? 0) + 1;

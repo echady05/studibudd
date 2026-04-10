@@ -10,7 +10,7 @@ const CanvasConnectSchema = z.object({
   canvasUrl: z.string().trim().min(10, "Canvas URL is required"),
   canvasToken: z.string().trim().min(10, "Canvas token is required"),
   selectedCourseIds: z.array(z.union([z.string(), z.number()])).optional(),
-  courseEggs: z.record(z.any()).optional(),
+  courseEggs: z.record(z.string(), z.any()).optional(),
 });
 
 export async function POST(req) {

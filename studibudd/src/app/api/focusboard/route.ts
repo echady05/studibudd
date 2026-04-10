@@ -4,7 +4,6 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { getFocusboardState, saveFocusboardState } from "@/lib/db";
 import { validateCsrfToken } from "@/lib/csrf";
-
 const FocusboardSchema = z.object({
   courseOrder: z.array(z.union([z.string(), z.number()])).optional(),
   creatureState: z.record(z.string(), z.any()).optional(),
