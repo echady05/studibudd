@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import supabase, { normalizeEmail } from "@/lib/db";
 import { hashPassword } from "@/lib/auth";
@@ -10,7 +10,7 @@ const SignupSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters").max(128),
 });
 
-export async function POST(req) {
+export async function POST(req: NextRequest) {
   if (!validateCsrfToken(req)) {
     return NextResponse.json({ error: "Invalid CSRF token" }, { status: 403 });
   }
