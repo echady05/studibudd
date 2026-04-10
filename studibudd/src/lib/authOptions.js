@@ -17,6 +17,7 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SER
   auth: { persistSession: false },
 });
 
+/** @type {import("next-auth").AuthOptions} */
 export const authOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   session: {
