@@ -1,37 +1,71 @@
-"use client";
+﻿'use client';
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { signIn } from 'next-auth/react';
 
 export default function SignupPage() {
   const router = useRouter();
-  const [displayName, setDisplayName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
+  const [csrfToken, setCsrfToken] = useState('');
+
+  useEffect(() => {
+    fetch('/api/auth/csrf')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.csrfToken) {
+          setCsrfToken(data.csrfToken);
+        }
+      })
+      .catch(() => {
+        // If CSRF endpoint fails, allow the form to degrade safely.
+      });
+  }, []);
 
   async function onSubmit(e) {
     e.preventDefault();
-    setError("");
+    setError('');
     setLoading(true);
+
+    if (!csrfToken) {
+      setError('Security token not loaded. Please refresh and try again.');
+      return;
+    }
+
     try {
-      const res = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-csrf-token': csrfToken,
+        },
         body: JSON.stringify({ displayName, email, password }),
       });
 
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(data.error || "Signup failed");
+        setError(data.error || 'Signup failed');
         return;
       }
 
-      localStorage.setItem("studiBuddToken", data.token);
-      router.push("/");
+      const signInResult = await signIn('credentials', {
+        redirect: false,
+        email,
+        password,
+      });
+
+      if (signInResult?.error) {
+        setError('Account created, but automatic login failed. Please sign in.');
+        return;
+      }
+
+      router.push('/dashboard');
     } catch {
-      setError("Server error");
+      setError('Server error');
     } finally {
       setLoading(false);
     }
@@ -83,13 +117,16 @@ export default function SignupPage() {
             </label>
 
             {error ? <div className="authError">{error}</div> : null}
+            {!csrfToken ? (
+              <div className="authError">Loading security token... please wait before submitting.</div>
+            ) : null}
 
-            <button className="btn btn-primary authBtn" disabled={loading}>
-              {loading ? "Creating..." : "Create account"}
+            <button className="btn btn-primary authBtn" disabled={loading || !csrfToken}>
+              {loading ? 'Creating...' : 'Create account'}
             </button>
 
             <div className="authHint">
-              Already have an account?{" "}
+              Already have an account?{' '}
               <a className="authLink" href="/login">
                 Log in
               </a>
@@ -100,4 +137,3 @@ export default function SignupPage() {
     </main>
   );
 }
-

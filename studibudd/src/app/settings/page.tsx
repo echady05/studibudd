@@ -324,6 +324,7 @@ function CanvasPanel() {
 function CoursesPanel() {
   const [courses, setCourses] = useState<{ id: number | string; name: string; code: string }[]>([]);
   const [selected, setSelected] = useState<(number | string)[]>([]);
+  const [csrfToken, setCsrfToken] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -332,6 +333,12 @@ function CoursesPanel() {
 
   useEffect(() => {
     fetchCourses();
+    fetch("/api/auth/csrf")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.csrfToken) setCsrfToken(data.csrfToken);
+      })
+      .catch(() => {});
   }, []);
 
   const fetchCourses = async () => {
@@ -378,9 +385,11 @@ function CoursesPanel() {
     
     setSaving(true);
     try {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (csrfToken) headers["x-csrf-token"] = csrfToken;
       const res = await fetch("/api/canvas/courses/manage", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({
           manualCourse: { name: newCourseName.trim(), code: newCourseCode.trim() }
         }),
@@ -410,9 +419,11 @@ function CoursesPanel() {
       : `canvas_${courseId}`;
       
     try {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (csrfToken) headers["x-csrf-token"] = csrfToken;
       const res = await fetch("/api/progress/reset", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ courseId: typeof courseId === 'string' ? courseId : courseId }),
       });
       if (res.ok) {

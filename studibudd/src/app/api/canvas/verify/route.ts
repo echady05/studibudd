@@ -1,19 +1,37 @@
-import { NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { validateCsrfToken } from "@/lib/csrf";
+import { normalizeCanvasUrl, buildCanvasHeaders } from "@/lib/canvas";
 
-export async function POST(req: Request) {
+const CanvasVerifySchema = z.object({
+  canvasUrl: z.string().trim().min(10, "Canvas URL is required"),
+  canvasToken: z.string().trim().min(10, "Canvas token is required"),
+});
+
+export async function POST(req: NextRequest) {
+  if (!validateCsrfToken(req)) {
+    return NextResponse.json({ error: "Invalid CSRF token" }, { status: 403 });
+  }
+
+  let body;
   try {
-    const { canvasUrl, canvasToken } = await req.json();
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
 
-    if (!canvasUrl || !canvasToken) {
-      return NextResponse.json({ error: "Missing Canvas URL or token." }, { status: 400 });
-    }
+  const parsed = CanvasVerifySchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.issues.map((issue) => issue.message).join(" ") }, { status: 400 });
+  }
 
-    // Test the token by fetching the user's own profile
+  const canvasUrl = normalizeCanvasUrl(parsed.data.canvasUrl);
+  const canvasToken = parsed.data.canvasToken;
+
+  try {
     const profileRes = await fetch(`${canvasUrl}/api/v1/users/self/profile`, {
-      headers: {
-        Authorization: `Bearer ${canvasToken}`,
-        "Content-Type": "application/json",
-      },
+      headers: buildCanvasHeaders(canvasToken),
+      redirect: "error",
     });
 
     if (!profileRes.ok) {
@@ -28,14 +46,11 @@ export async function POST(req: Request) {
 
     const profile = await profileRes.json();
 
-    // Also fetch courses so we can show a count in the preview
     const coursesRes = await fetch(
       `${canvasUrl}/api/v1/courses?enrollment_state=active&per_page=50`,
       {
-        headers: {
-          Authorization: `Bearer ${canvasToken}`,
-          "Content-Type": "application/json",
-        },
+        headers: buildCanvasHeaders(canvasToken),
+        redirect: "error",
       }
     );
 
@@ -44,19 +59,16 @@ export async function POST(req: Request) {
       ? courses.filter((c: { name?: string }) => c.name)
       : [];
 
-      console.log("Sample course:", JSON.stringify(activeCourses[0], null, 2));
-
-      return NextResponse.json({
-        valid: true,
-        userName: profile.short_name ?? profile.name ?? "Student",
-        courseCount: activeCourses.length,
-        courses: activeCourses.map((c: { id: number; name?: string; course_code?: string }) => ({
-          id: c.id,
-          name: c.name ?? "",
-          courseCode: c.course_code ?? "",
-        })),
-      });
-
+    return NextResponse.json({
+      valid: true,
+      userName: profile.short_name ?? profile.name ?? "Student",
+      courseCount: activeCourses.length,
+      courses: activeCourses.map((c: { id: number; name?: string; course_code?: string }) => ({
+        id: c.id,
+        name: c.name ?? "",
+        courseCode: c.course_code ?? "",
+      })),
+    });
   } catch (err) {
     console.error("Canvas verify error:", err);
     return NextResponse.json({ error: "Something went wrong — check your URL and token." }, { status: 500 });

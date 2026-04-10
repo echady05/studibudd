@@ -307,7 +307,7 @@ interface CanvasAssignment {
   htmlUrl: string;
 }
 
-function CanvasConnect({ onConnected }: { onConnected: () => void }) {
+function CanvasConnect({ onConnected, csrfToken }: { onConnected: () => void; csrfToken: string }) {
   const router = useRouter();
 
   const [status, setStatus] = useState<"loading" | "connected" | "disconnected">("loading");
@@ -355,10 +355,19 @@ const [eggPickerStep, setEggPickerStep] = useState<"courses" | "eggs">("courses"
     const cleanUrl = cleanCanvasUrl(url);
     if (!cleanUrl || !token.trim()) return;
     setVerifying(true);
+    if (!csrfToken) {
+      setError("Security token not loaded. Please wait a moment and try again.");
+      setVerifying(false);
+      return;
+    }
+
     try {
       const res = await fetch("/api/canvas/verify", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-csrf-token": csrfToken,
+        },
         body: JSON.stringify({ canvasUrl: cleanUrl, canvasToken: token.trim() }),
       });
       const d = await res.json().catch(() => ({}));
@@ -376,9 +385,18 @@ setStep("customize");
     setSaving(true);
     const cleanUrl = cleanCanvasUrl(url);
     try {
+      if (!csrfToken) {
+        setError("Security token not loaded. Please wait a moment and try again.");
+        setSaving(false);
+        return;
+      }
+
       const res = await fetch("/api/canvas/connect", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-csrf-token": csrfToken,
+        },
         body: JSON.stringify({
           canvasUrl: cleanUrl,
           canvasToken: token.trim(),
@@ -408,7 +426,11 @@ setStep("customize");
   }
 
   async function disconnect() {
-    await fetch("/api/canvas/connect", { method: "DELETE" });
+    if (!csrfToken) {
+      setError("Security token not loaded. Please refresh and try again.");
+      return;
+    }
+    await fetch("/api/canvas/connect", { method: "DELETE", headers: { "x-csrf-token": csrfToken } });
     setStatus("disconnected");
     setCourseCount(0);
     setConnectedName("");
@@ -719,7 +741,7 @@ setStep("customize");
     </>
   );
 }
-function Assignments({ refreshKey }: { refreshKey: number }) {
+function Assignments({ refreshKey, csrfToken }: { refreshKey: number; csrfToken: string }) {
   const [canvasItems, setCanvasItems] = useState<CanvasAssignment[] | null>(null);
   const [localDone, setLocalDone] = useState<Set<number>>(new Set());
   const [connected, setConnected] = useState(false);
@@ -740,11 +762,16 @@ function Assignments({ refreshKey }: { refreshKey: number }) {
       if (s.has(id)) { s.delete(id); return s; }
       s.add(id);
       // Award XP when marking done
-      fetch("/api/canvas/complete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ assignmentId: id, urgent }),
-      }).catch(() => {});
+      if (csrfToken) {
+        fetch("/api/canvas/complete", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-csrf-token": csrfToken,
+          },
+          body: JSON.stringify({ assignmentId: id, urgent }),
+        }).catch(() => {});
+      }
       return s;
     });
   };
@@ -845,7 +872,7 @@ function XpBar({ xp, max }: { xp: number; max: number }) {
   );
 }
 
-function FocusBoard({ refreshKey }: { refreshKey: number }) {
+function FocusBoard({ refreshKey, csrfToken }: { refreshKey: number; csrfToken: string }) {
   const [page, setPage] = useState(0);
   const [canvasAssignments, setCanvasAssignments] = useState<CanvasAssignment[]>([]);
   const [courses, setCourses] = useState<{ id: number; name: string; code: string }[]>([]);
@@ -867,9 +894,13 @@ function FocusBoard({ refreshKey }: { refreshKey: number }) {
     if (order.length === 0) return;
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(() => {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (csrfToken) {
+        headers["x-csrf-token"] = csrfToken;
+      }
       fetch("/api/focusboard", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ courseOrder: order, creatureState: creatures }),
       }).catch(() => {});
     }, 800); // debounce — wait 800ms after last change before saving
@@ -1473,6 +1504,20 @@ export default function BentoDashboard({ session }: BentoDashboardProps) {
   const [contactMessage, setContactMessage] = useState("");
   const [contactLoading, setContactLoading] = useState(false);
   const [contactStatus, setContactStatus] = useState("");
+  const [csrfToken, setCsrfToken] = useState("");
+
+  useEffect(() => {
+    fetch("/api/auth/csrf")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.csrfToken) {
+          setCsrfToken(data.csrfToken);
+        }
+      })
+      .catch(() => {
+        // If CSRF token retrieval fails, the request will still be handled securely server-side.
+      });
+  }, []);
   const year = new Date().getFullYear();
   const initials = getInitials(session.user?.name);
 
@@ -1538,7 +1583,7 @@ export default function BentoDashboard({ session }: BentoDashboardProps) {
             </div>
 
             {/* Canvas Connect */}
-            <CanvasConnect onConnected={() => setRefreshKey(k => k + 1)} />
+            <CanvasConnect onConnected={() => setRefreshKey(k => k + 1)} csrfToken={csrfToken} />
 
             {/* Calendar */}
             <div className="bento-card">
@@ -1547,7 +1592,7 @@ export default function BentoDashboard({ session }: BentoDashboardProps) {
 
             {/* Assignments */}
             <div className="bento-card">
-              <Assignments refreshKey={refreshKey} />
+              <Assignments refreshKey={refreshKey} csrfToken={csrfToken} />
             </div>
 
           </div>
@@ -1631,7 +1676,7 @@ export default function BentoDashboard({ session }: BentoDashboardProps) {
             </div>
 
             {/* Focus Board */}
-            <FocusBoard refreshKey={refreshKey} />
+            <FocusBoard refreshKey={refreshKey} csrfToken={csrfToken} />
 
             {/* Game */}
             {showGame && (
@@ -1775,6 +1820,11 @@ export default function BentoDashboard({ session }: BentoDashboardProps) {
                 {contactStatus}
               </p>
             )}
+            {!csrfToken && (
+              <p style={{ fontSize: 12, color: "#f59e0b", margin: "0 0 16px 0" }}>
+                Loading security token... please wait before sending your message.
+              </p>
+            )}
 
             <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
               <button
@@ -1801,19 +1851,25 @@ export default function BentoDashboard({ session }: BentoDashboardProps) {
               <button
                 onClick={async () => {
                   if (!contactMessage.trim() || !session?.user?.email) return;
+                  if (!csrfToken) {
+                    setContactStatus("Security token is still loading. Please wait a moment.");
+                    return;
+                  }
 
                   setContactLoading(true);
                   try {
                     const response = await fetch("/api/contact", {
                       method: "POST",
-                      headers: { "Content-Type": "application/json" },
+                      headers: {
+                        "Content-Type": "application/json",
+                        "x-csrf-token": csrfToken,
+                      },
                       body: JSON.stringify({
-                        userId: session.user.email,
                         message: contactMessage,
                       }),
                     });
 
-                    const data = await response.json();
+                    const data = await response.json().catch(() => ({}));
 
                     if (response.ok) {
                       setContactStatus("Message sent successfully! We'll get back to you soon.");
@@ -1833,7 +1889,7 @@ export default function BentoDashboard({ session }: BentoDashboardProps) {
                     setContactLoading(false);
                   }
                 }}
-                disabled={!contactMessage.trim() || contactLoading}
+                disabled={!contactMessage.trim() || contactLoading || !csrfToken}
                 style={{
                   padding: "8px 20px",
                   borderRadius: 8,

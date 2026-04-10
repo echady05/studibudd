@@ -1,36 +1,36 @@
-"use client";
+﻿'use client';
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { signIn } from 'next-auth/react';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
 
   async function onSubmit(e) {
     e.preventDefault();
-    setError("");
+    setError('');
     setLoading(true);
+
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+      const result = await signIn('credentials', {
+        redirect: false,
+        email,
+        password,
       });
 
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setError(data.error || "Login failed");
+      if (result?.error) {
+        setError(result.error || 'Invalid email or password');
         return;
       }
 
-      localStorage.setItem("studiBuddToken", data.token);
-      router.push("/");
+      router.push('/dashboard');
     } catch {
-      setError("Server error");
+      setError('Server error');
     } finally {
       setLoading(false);
     }
@@ -41,9 +41,7 @@ export default function LoginPage() {
       <div className="container authWrap">
         <div className="authCard">
           <div className="authTitle">Log in</div>
-          <div className="authSub">
-            Save progress and sync your egg.
-          </div>
+          <div className="authSub">Save progress and sync your egg.</div>
 
           <form onSubmit={onSubmit} className="authForm">
             <label className="authLabel">
@@ -73,11 +71,11 @@ export default function LoginPage() {
             {error ? <div className="authError">{error}</div> : null}
 
             <button className="btn btn-primary authBtn" disabled={loading}>
-              {loading ? "Logging in..." : "Login"}
+              {loading ? 'Logging in...' : 'Login'}
             </button>
 
             <div className="authHint">
-              New here?{" "}
+              New here?{' '}
               <a className="authLink" href="/signup">
                 Create an account
               </a>
@@ -88,4 +86,3 @@ export default function LoginPage() {
     </main>
   );
 }
-

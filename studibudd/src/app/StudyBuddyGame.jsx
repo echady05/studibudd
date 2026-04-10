@@ -103,6 +103,7 @@ export default function StudyBuddyGame() {
   const [lastResult, setLastResult] = useState(null);
   const [isHatching, setIsHatching] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [csrfToken, setCsrfToken] = useState("");
 
   const [canvasCourses, setCanvasCourses] = useState(null);
 
@@ -165,6 +166,15 @@ export default function StudyBuddyGame() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    fetch("/api/auth/csrf")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.csrfToken) setCsrfToken(data.csrfToken);
+      })
+      .catch(() => {});
+  }, []);
+
   const changeSubject = (next) => {
     setSubject(next);
     setLastResult(null);
@@ -179,9 +189,11 @@ export default function StudyBuddyGame() {
 
     (async () => {
       try {
+        const headers = { "Content-Type": "application/json" };
+        if (csrfToken) headers["x-csrf-token"] = csrfToken;
         const res = await fetch("/api/progress/answer", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers,
           body: JSON.stringify({ subject, ok }),
         });
         if (res.ok) { await fetchProgress(); return; }
@@ -200,9 +212,11 @@ export default function StudyBuddyGame() {
     setLastResult({ ok: true, text: "Hatching... amazing work!" });
     window.setTimeout(async () => {
       try {
+        const headers = { "Content-Type": "application/json" };
+        if (csrfToken) headers["x-csrf-token"] = csrfToken;
         const res = await fetch("/api/progress/hatch", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers,
           body: JSON.stringify({ subject }),
         });
         if (res.ok) { await fetchProgress(); }
