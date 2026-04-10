@@ -7,7 +7,7 @@ import { validateCsrfToken } from "@/lib/csrf";
 
 const FocusboardSchema = z.object({
   courseOrder: z.array(z.union([z.string(), z.number()])).optional(),
-  creatureState: z.record(z.any()).optional(),
+  creatureState: z.record(z.string(), z.any()).optional(),
 }).refine((value) => value.courseOrder !== undefined || value.creatureState !== undefined, {
   message: "At least one state field is required",
 });
